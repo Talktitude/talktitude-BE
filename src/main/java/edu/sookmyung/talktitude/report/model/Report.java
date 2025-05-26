@@ -18,12 +18,15 @@ public class Report {
     private Long id;
 
     @OneToOne
+    @JoinColumn(name="session_id", nullable=false)
     private ChatSession chatSession;
 
+    @Column(nullable=false)
     private String category;
 
-    @Column(nullable=false)
+    @Column(name="summary_text",nullable=false)
     private String summaryText;
 
-    private LocalDateTime createdAt;
+    @Column(name="created_at",nullable=false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

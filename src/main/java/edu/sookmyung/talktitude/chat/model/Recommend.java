@@ -1,9 +1,6 @@
 package edu.sookmyung.talktitude.chat.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.websocket.Decoder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,9 +17,12 @@ public class Recommend {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int messageId;
+    @ManyToOne
+    @JoinColumn(name = "message_id", nullable = false)
+    private ChatMessage message;
 
-    private Decoder.Text responseText;
+    @Column(columnDefinition = "TEXT")
+    private String responseText;
 
     private int priority;
 

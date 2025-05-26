@@ -11,16 +11,23 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-public class OrderRecord {
+@Table(name = "orders") // "order"는 예약어 충돌 방지
+public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int clientId;
+    @ManyToOne
+    @JoinColumn(name = "client_id", nullable = false)
+    private Client client;
 
-    private int restaurantId;
+    @OneToOne
+    @JoinColumn(name = "restaurant_id")
+    private Restaurant restaurant;
 
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "order_number", nullable = false, unique = true, length = 10)
     private String orderNumber;
 }

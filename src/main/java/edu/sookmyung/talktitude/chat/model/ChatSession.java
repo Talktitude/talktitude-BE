@@ -27,14 +27,14 @@ public class ChatSession {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    private LocalDateTime createdAt;
+    @OneToOne
+    @JoinColumn(name="order_id",nullable=false)
+    private Order order;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING) // ← enum 값을 문자열로 저장
     private Status status;
 
-    private String email;
-
-    private boolean isDeleted;
-
-    private boolean isFilter;
 }

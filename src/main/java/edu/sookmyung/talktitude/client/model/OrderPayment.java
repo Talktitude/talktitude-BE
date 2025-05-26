@@ -1,8 +1,6 @@
 package edu.sookmyung.talktitude.client.model;
 
-
 import jakarta.persistence.*;
-import jakarta.persistence.criteria.Order;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,22 +15,28 @@ public class OrderPayment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name="order_id")
+    @OneToOne
+    @JoinColumn(name="order_id", nullable=false)
     private Order order;
 
-    @Column(nullable=false)
-    private int paidAmount;
+    @Column(name="paid_amount",nullable=false)
+    private int paidAmount =0;
 
-    private String method;
+    @Enumerated(EnumType.STRING)
+    private Method method = Method.카드;
 
-    private int totalAmount;
+    @Column(name="total_amount",nullable=false)
+    private int totalAmount=0;
 
-    private int menuPrice;
+    @Column(name="menu_price",nullable=false)
+    private int menuPrice=0;
 
-    private int discountAmount;
+    @Column(name="discount_amount",nullable=false)
+    private int discountAmount=0;
 
-    private int couponAmount;
+    @Column(name="coupon_amount",nullable=false)
+    private int couponAmount=0;
 
-    private int deliveryFee;
+    @Column(name="delivery_fee",nullable=false)
+    private int deliveryFee=0;
 }

@@ -1,9 +1,6 @@
 package edu.sookmyung.talktitude.member.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,19 +14,26 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "login_id", nullable = false, unique = true)
     private String loginId;
 
-    private String passWord;
+    @Column(nullable = false, length = 60)
+    private String password;
 
+    @Column(nullable = false, length = 10)
     private String name;
 
+    @Column(nullable = false, length = 15)
     private String phone;
 
+    @Column(nullable = false, length = 50)
     private String email;
 
-    private boolean is_deleted;
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 
-    private boolean is_filter;
+    @Column(name = "is_filter", nullable = false)
+    private boolean isFilter = true;
 }
 
 

@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.util.List;
+
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,10 +23,12 @@ public class Restaurant {
 
     private String imageUrl;
 
+    @Column(nullable=false)
     private String phone;
 
+    @Column(nullable=false)
     private String address;
 
-    @OneToMany(mappedBy="restaurant") //자식의 필드명
-    private List<RestaurantMenu> restaurantMenuList;
+    @OneToMany(mappedBy="restaurant",cascade = CascadeType.ALL) //자식의 필드명
+    private List<RestaurantMenu> menus;
 }

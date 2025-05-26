@@ -16,7 +16,7 @@ public class RestaurantMenu {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="restaurant_id") // 자식 테이블의 FK 컬럼명.
+    @JoinColumn(name="restaurant_id",nullable = false) // 자식 테이블의 FK 컬럼명.
     private Restaurant restaurant;
 
     @Column(nullable=false)

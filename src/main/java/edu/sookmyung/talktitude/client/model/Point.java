@@ -15,9 +15,10 @@ public class Point {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(mappedBy = "id")
+    @OneToOne
+    @JoinColumn(name="client_id")
     @Column(unique = true, nullable=false)
-    private Client clientId;
+    private Client client;
 
-    private Long amount;
+    private Long amount=0L;
 }

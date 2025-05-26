@@ -1,6 +1,7 @@
 package edu.sookmyung.talktitude.report.model;
 
 import edu.sookmyung.talktitude.chat.model.ChatSession;
+import edu.sookmyung.talktitude.member.model.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,21 +20,20 @@ public class Memo {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="user_id")
+    @JoinColumn(name="user_id", nullable=false)
     private Member member;
 
     @ManyToOne
-    @JoinColumn(name="session_id")
+    @JoinColumn(name="session_id", nullable=false)
     private ChatSession chatSession;
 
     @Column(nullable=false)
     private String memoText;
 
-    //디폴트 값 넣기
     @Column(nullable=false)
-    private boolean isDeleted;
+    private boolean isDeleted=false;
 
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     //memo update 기능을 위해 명시.
     private LocalDateTime updatedAt;

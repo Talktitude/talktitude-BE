@@ -2,7 +2,6 @@ package edu.sookmyung.talktitude.client.model;
 
 
 import jakarta.persistence.*;
-import jakarta.persistence.criteria.Order;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,12 +16,16 @@ public class OrderMenu {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="order_id")
+    @JoinColumn(name="order_id",nullable=false)
     private Order order;
 
+    @Column(nullable=false)
     private String menu;
 
+    @Column(nullable=false)
     private int price;
 
+    @Column(nullable=false)
     private int quantity;
+
 }

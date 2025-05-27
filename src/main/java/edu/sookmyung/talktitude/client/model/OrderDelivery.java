@@ -24,7 +24,9 @@ public class OrderDelivery {
     @Column(nullable=false)
     private String address;
 
+    @Column(name="deliver_note",columnDefinition = "TEXT")
     private String deliveryNote;
 
+    @Column(name="restaurant_note",columnDefinition = "TEXT")
     private String restaurantNote;
 }

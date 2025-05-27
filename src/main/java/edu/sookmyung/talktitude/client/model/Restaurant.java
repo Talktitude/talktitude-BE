@@ -29,6 +29,9 @@ public class Restaurant {
     @Column(nullable=false)
     private String address;
 
+<<<<<<< HEAD
     @OneToMany(mappedBy="restaurant",cascade = CascadeType.ALL) //자식의 필드명
     private List<RestaurantMenu> menus;
+=======
+>>>>>>> 45d06875476d035b24e3f470ae72ded280edf710
 }

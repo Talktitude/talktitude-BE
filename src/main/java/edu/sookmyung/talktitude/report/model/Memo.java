@@ -27,10 +27,14 @@ public class Memo {
     @JoinColumn(name="session_id", nullable=false)
     private ChatSession chatSession;
 
-    @Column(nullable=false)
+    @Column(name="memo_text",nullable=false)
     private String memoText;
 
+<<<<<<< HEAD
     @Column(nullable=false)
+=======
+    @Column(name="is_deleted",nullable=false)
+>>>>>>> 45d06875476d035b24e3f470ae72ded280edf710
     private boolean isDeleted=false;
 
     private LocalDateTime createdAt = LocalDateTime.now();

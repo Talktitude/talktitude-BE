@@ -1,7 +1,5 @@
 package edu.sookmyung.talktitude.chat.model;
 
-import edu.sookmyung.talktitude.client.model.Client;
-import edu.sookmyung.talktitude.member.model.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,24 +11,23 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-public class ChatMessage {
+public class ChatMedia {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "session_id", nullable = false)
-    private ChatSession chatSession;
+    @JoinColumn(name = "message_id", nullable = false)
+    private ChatMessage message;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "sender_type", nullable = false)
-    private SenderType senderType;
+    @Column(name = "media_type", nullable = false)
+    private MediaType mediaType;
 
-    @Column(columnDefinition = "TEXT")
-    private String originalText;
+    @Column(name = "media_url", nullable = false, length = 255)
+    private String mediaUrl;
 
-    @Column(columnDefinition = "TEXT")
-    private String convertedText;
+    private Long mediaSize;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

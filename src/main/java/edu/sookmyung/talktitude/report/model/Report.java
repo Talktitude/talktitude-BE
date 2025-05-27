@@ -24,9 +24,13 @@ public class Report {
     @Column(nullable=false)
     private String category;
 
-    @Column(nullable=false)
+    @Column(name="summary_text",nullable=false)
     private String summaryText;
 
+<<<<<<< HEAD
     @Column(nullable=false)
+=======
+    @Column(name="created_at",nullable=false)
+>>>>>>> 45d06875476d035b24e3f470ae72ded280edf710
     private LocalDateTime createdAt = LocalDateTime.now();
 }

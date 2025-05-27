@@ -1,9 +1,6 @@
 package edu.sookmyung.talktitude.client.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,15 +14,21 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "login_id", unique = true)
     private String loginId;
 
+    @Column(nullable = false, length = 60)
     private String passWord;
 
+    @Column(length = 10)
     private String name;
 
+    @Column(nullable = false, length = 15)
     private String phone;
 
-    private boolean is_deleted;
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 
+    @Column(nullable = false, length = 100)
     private String address;
 }

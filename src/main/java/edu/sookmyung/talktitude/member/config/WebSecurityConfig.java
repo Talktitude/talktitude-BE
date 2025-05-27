@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
@@ -21,6 +22,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
+    private final TokenProvider tokenProvider;
     //스프링 시큐리티 기능 비활성화
     @Bean
     public WebSecurityCustomizer configure(){
@@ -31,7 +33,9 @@ public class WebSecurityConfig {
     //특정 HTTP 요청에 대한 웹 기반 보안 구성
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.authorizeHttpRequests(auth-> auth //인증, 인가 설정
+        return http
+                .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .authorizeHttpRequests(auth-> auth //인증, 인가 설정
                 .requestMatchers("/login","/signup","/member").permitAll() // 인증 없이 접근 가능
                 .anyRequest().authenticated()) //나머지 모든 요청 -> 인증 필요
                 .build();
@@ -50,5 +54,10 @@ public class WebSecurityConfig {
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public TokenAuthenticationFilter tokenAuthenticationFilter() {
+        return new TokenAuthenticationFilter(tokenProvider);
     }
 }

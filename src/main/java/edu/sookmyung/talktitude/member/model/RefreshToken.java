@@ -1,8 +1,11 @@
 package edu.sookmyung.talktitude.member.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @Getter
@@ -28,4 +31,5 @@ public class RefreshToken {
         this.refreshToken = newRefreshToken;
         return this;
     }
+
 }

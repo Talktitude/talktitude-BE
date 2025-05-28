@@ -23,7 +23,7 @@ public class Member implements UserDetails { //UserDetails를 상속받아 인�
     @Column(name = "login_id", nullable = false, unique = true)
     private String loginId;
 
-    @Column(nullable = false, length = 60)
+    @Column(nullable = false, length = 255)
     private String password;
 
     @Column(nullable = false, length = 10)

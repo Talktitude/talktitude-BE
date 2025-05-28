@@ -34,6 +34,7 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
+                .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth-> auth //인증, 인가 설정
                 .requestMatchers("/login","/signup","/member").permitAll() // 인증 없이 접근 가능

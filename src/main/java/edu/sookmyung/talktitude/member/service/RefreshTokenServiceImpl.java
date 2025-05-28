@@ -22,14 +22,12 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     public RefreshToken createRefreshToken(Member member){
+        //기존 리프레시 토큰 찾기
+        RefreshToken refreshToken = (RefreshToken) refreshTokenRepository.findByMemberId(member.getId())
+                .orElse(new RefreshToken(member.getId(),null));
 
-        //기존 리프레시 토큰이 있다면 삭제
-        refreshTokenRepository.findByMemberId(member.getId())
-                .ifPresent(token -> refreshTokenRepository.deleteByMemberId(member.getId()));
-
-        String refreshTokenValue = tokenProvider.generateToken(member, Duration.ofHours(7));
-
-        RefreshToken refreshToken = new RefreshToken(member.getId(),refreshTokenValue);
+        String newToken = tokenProvider.generateRefreshToken(member);
+        refreshToken.update(newToken);
 
         return refreshTokenRepository.save(refreshToken);
     }

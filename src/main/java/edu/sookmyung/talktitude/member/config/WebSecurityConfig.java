@@ -23,6 +23,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class WebSecurityConfig {
 
     private final TokenProvider tokenProvider;
+    private final TokenAuthenticationFilter tokenAuthenticationFilter;
     //스프링 시큐리티 기능 비활성화
     @Bean
     public WebSecurityCustomizer configure(){
@@ -35,7 +36,7 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth-> auth //인증, 인가 설정
                 .requestMatchers("/login","/signup","/member").permitAll() // 인증 없이 접근 가능
                 .anyRequest().authenticated()) //나머지 모든 요청 -> 인증 필요
@@ -57,8 +58,4 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public TokenAuthenticationFilter tokenAuthenticationFilter() {
-        return new TokenAuthenticationFilter(tokenProvider);
-    }
 }

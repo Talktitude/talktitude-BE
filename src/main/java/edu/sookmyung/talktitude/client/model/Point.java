@@ -17,7 +17,6 @@ public class Point {
 
     @OneToOne
     @JoinColumn(name="client_id")
-    @Column(unique = true, nullable=false)
     private Client client;
 
     private Long amount=0L;

@@ -1,4 +1,4 @@
-package edu.sookmyung.talktitude.member.config;
+package edu.sookmyung.talktitude.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

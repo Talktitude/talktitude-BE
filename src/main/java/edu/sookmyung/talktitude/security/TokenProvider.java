@@ -1,15 +1,15 @@
-package edu.sookmyung.talktitude.member.config;
+package edu.sookmyung.talktitude.security;
 
-import edu.sookmyung.talktitude.exception.InvalidTokenException;
-import edu.sookmyung.talktitude.exception.TokenExpiredException;
 import edu.sookmyung.talktitude.member.model.Member;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Header;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
-
 
 import java.time.Duration;
 import java.util.Collections;

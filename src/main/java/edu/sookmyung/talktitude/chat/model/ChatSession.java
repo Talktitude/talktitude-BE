@@ -27,9 +27,9 @@ public class ChatSession {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @OneToOne
-    @JoinColumn(name="order_id",nullable=false)
-    private Order order;
+//    @OneToOne
+//    @JoinColumn(name="order_id",nullable=false)
+//    private Order order;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

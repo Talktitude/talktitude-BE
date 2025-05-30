@@ -20,7 +20,7 @@ public abstract class BaseUser {
     @Column(name = "login_id", nullable = false, unique = true)
     private String loginId;
 
-    @Column(nullable = false, length = 60)
+    @Column(name = "password", nullable = false, length = 60)
     private String password;
 
     @Column(nullable = false, length = 10)

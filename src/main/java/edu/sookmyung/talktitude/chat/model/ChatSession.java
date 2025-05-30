@@ -1,6 +1,7 @@
 package edu.sookmyung.talktitude.chat.model;
 
 import edu.sookmyung.talktitude.client.model.Client;
+import edu.sookmyung.talktitude.client.model.Order;
 import edu.sookmyung.talktitude.member.model.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

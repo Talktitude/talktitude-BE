@@ -16,8 +16,8 @@ public class RefreshToken {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="member_id",nullable=false,unique=true)
-    private Long memberId;
+    @Column(name="user_id",nullable=false,unique=true)
+    private Long userId;
 
     @Column(name="refresh_token",nullable = false)
     private String refreshToken;
@@ -25,8 +25,8 @@ public class RefreshToken {
     @Column(name="user_type",nullable=false)
     private String userType;
 
-    public RefreshToken(Long memberId, String refreshToken, String userType) {
-        this.memberId = memberId;
+    public RefreshToken(Long userId, String refreshToken, String userType) {
+        this.userId = userId;
         this.refreshToken = refreshToken;
         this.userType = userType;
     }

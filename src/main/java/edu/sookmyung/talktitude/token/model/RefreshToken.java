@@ -1,11 +1,8 @@
-package edu.sookmyung.talktitude.member.model;
+package edu.sookmyung.talktitude.token.model;
 
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @Getter

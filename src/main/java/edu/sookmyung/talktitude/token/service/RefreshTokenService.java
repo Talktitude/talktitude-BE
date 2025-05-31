@@ -1,10 +1,9 @@
-package edu.sookmyung.talktitude.member.service;
+package edu.sookmyung.talktitude.token.service;
 
 import edu.sookmyung.talktitude.config.jwt.TokenProvider;
 import edu.sookmyung.talktitude.member.model.BaseUser;
-import edu.sookmyung.talktitude.member.model.Member;
-import edu.sookmyung.talktitude.member.model.RefreshToken;
-import edu.sookmyung.talktitude.member.repository.RefreshTokenRepository;
+import edu.sookmyung.talktitude.token.model.RefreshToken;
+import edu.sookmyung.talktitude.token.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

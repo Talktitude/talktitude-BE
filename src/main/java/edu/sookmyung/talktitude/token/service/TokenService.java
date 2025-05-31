@@ -1,12 +1,11 @@
-package edu.sookmyung.talktitude.member.service;
+package edu.sookmyung.talktitude.token.service;
 
-import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.client.service.ClientService;
 import edu.sookmyung.talktitude.exception.InvalidTokenException;
 import edu.sookmyung.talktitude.exception.TokenExpiredException;
 import edu.sookmyung.talktitude.config.jwt.TokenProvider;
 import edu.sookmyung.talktitude.member.model.BaseUser;
-import edu.sookmyung.talktitude.member.model.Member;
+import edu.sookmyung.talktitude.member.service.MemberService;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

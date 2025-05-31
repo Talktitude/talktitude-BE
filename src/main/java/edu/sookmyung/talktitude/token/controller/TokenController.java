@@ -1,10 +1,10 @@
-package edu.sookmyung.talktitude.member.controller;
+package edu.sookmyung.talktitude.token.controller;
 
 import edu.sookmyung.talktitude.exception.InvalidTokenException;
 import edu.sookmyung.talktitude.exception.TokenExpiredException;
-import edu.sookmyung.talktitude.member.dto.CreateAccessTokenRequest;
-import edu.sookmyung.talktitude.member.dto.CreateAccessTokenResponse;
-import edu.sookmyung.talktitude.member.service.TokenService;
+import edu.sookmyung.talktitude.token.dto.CreateAccessTokenRequest;
+import edu.sookmyung.talktitude.token.dto.CreateAccessTokenResponse;
+import edu.sookmyung.talktitude.token.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

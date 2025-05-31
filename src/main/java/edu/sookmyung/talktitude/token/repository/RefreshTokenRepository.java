@@ -1,6 +1,6 @@
-package edu.sookmyung.talktitude.member.repository;
+package edu.sookmyung.talktitude.token.repository;
 
-import edu.sookmyung.talktitude.member.model.RefreshToken;
+import edu.sookmyung.talktitude.token.model.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,5 +1,6 @@
-package edu.sookmyung.talktitude.config.jwt;
+package edu.sookmyung.talktitude.config.security;
 
+import edu.sookmyung.talktitude.config.jwt.TokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

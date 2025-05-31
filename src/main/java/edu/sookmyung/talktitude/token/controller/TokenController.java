@@ -1,10 +1,10 @@
-package edu.sookmyung.talktitude.member.controller;
+package edu.sookmyung.talktitude.token.controller;
 
 import edu.sookmyung.talktitude.exception.InvalidTokenException;
 import edu.sookmyung.talktitude.exception.TokenExpiredException;
-import edu.sookmyung.talktitude.member.dto.CreateAccessTokenRequest;
-import edu.sookmyung.talktitude.member.dto.CreateAccessTokenResponse;
-import edu.sookmyung.talktitude.member.service.TokenService;
+import edu.sookmyung.talktitude.token.dto.CreateAccessTokenRequest;
+import edu.sookmyung.talktitude.token.dto.CreateAccessTokenResponse;
+import edu.sookmyung.talktitude.token.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ public class TokenController {
         //리프레시 토큰 누락 검사
         if(refreshToken==null || refreshToken.trim().isEmpty()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Refresh token is missing.");
+                    .body("리프레시 토큰이 없습니다.");
         }
         try {
             String newAccessToken = tokenService.createNewAccessToken(request.getRefreshToken());
@@ -38,11 +38,11 @@ public class TokenController {
         }catch(TokenExpiredException e){
             //토큰 만료 -> 재로그인 필요.
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new IllegalArgumentException("Refresh token has expired. Please login again."));
+                    .body(new IllegalArgumentException("리프레시 토큰이 만료되었습니다. 다시 로그인해주세요."));
         }catch(InvalidTokenException e){
             //토큰이 유효하지 않음
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new IllegalArgumentException("Invalid refresh token."));
+                    .body(new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다."));
         }
     }
 }

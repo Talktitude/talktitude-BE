@@ -12,8 +12,12 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @Getter
 @SuperBuilder
-public class Client extends BaseUser {
+public class Client extends BaseUser{
 
     @Column(nullable = false, length = 100)
     private String address;
+
+    public String getUserType() {
+        return "Client";
+    }
 }

@@ -1,4 +1,4 @@
-package edu.sookmyung.talktitude.member.service;
+package edu.sookmyung.talktitude.client.service;
 
 import edu.sookmyung.talktitude.client.repository.ClientRepository;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
@@ -10,13 +10,13 @@ import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
-public class MemberDetailService implements UserDetailsService {
+public class ClientDetailService implements UserDetailsService {
 
-    private final MemberRepository memberRepository;
+    private final ClientRepository clientRepository;
 
     @Override
     public UserDetails loadUserByUsername(String loginId) throws UsernameNotFoundException {
-        return memberRepository.findByLoginId(loginId)
+        return clientRepository.findByLoginId(loginId)
                 .orElseThrow(()->new UsernameNotFoundException(loginId+"라는 User를 찾을 수 없습니다."));
     }
 }

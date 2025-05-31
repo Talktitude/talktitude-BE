@@ -17,7 +17,7 @@ public class RefreshTokenService {
 
     public RefreshToken createRefreshToken(BaseUser baseUser){
         //기존 리프레시 토큰 찾기
-        RefreshToken refreshToken = refreshTokenRepository.findByMemberIdAndUserType(baseUser.getId(),baseUser.getUserType())
+        RefreshToken refreshToken = refreshTokenRepository.findByUserIdAndUserType(baseUser.getId(),baseUser.getUserType())
                 .orElse(new RefreshToken(baseUser.getId(),null,baseUser.getUserType()));
 
         String newToken = tokenProvider.generateRefreshToken(baseUser);

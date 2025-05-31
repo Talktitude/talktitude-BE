@@ -2,6 +2,8 @@ package edu.sookmyung.talktitude.client.controller;
 
 import edu.sookmyung.talktitude.client.dto.ClientDto;
 import edu.sookmyung.talktitude.client.service.ClientService;
+import edu.sookmyung.talktitude.member.dto.LoginRequest;
+import edu.sookmyung.talktitude.member.dto.LoginResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,5 +22,11 @@ public class ClientController {
     public ResponseEntity<String> signup(@RequestBody ClientDto dto) {
         clientService.register(dto);
         return ResponseEntity.ok("고객 회원가입 완료");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest){
+        LoginResponse response = clientService.login(loginRequest.getLoginId(),loginRequest.getPassword());
+        return ResponseEntity.ok(response);
     }
 }

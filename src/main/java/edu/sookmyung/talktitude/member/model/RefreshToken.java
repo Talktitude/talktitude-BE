@@ -22,9 +22,13 @@ public class RefreshToken {
     @Column(name="refresh_token",nullable = false)
     private String refreshToken;
 
-    public RefreshToken(Long memberId, String refreshToken) {
+    @Column(name="user_type",nullable=false)
+    private String userType;
+
+    public RefreshToken(Long memberId, String refreshToken, String userType) {
         this.memberId = memberId;
         this.refreshToken = refreshToken;
+        this.userType = userType;
     }
 
     public RefreshToken update(String newRefreshToken) {

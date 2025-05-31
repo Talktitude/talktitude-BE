@@ -7,6 +7,8 @@ import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.member.model.RefreshToken;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,11 +21,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class MemberService {
 
+    @Autowired
+    @Qualifier("memberAuthManager")
+    private final AuthenticationManager memberAuthManager;
+
     private final MemberRepository memberRepository;
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
 
     public void register(MemberDto dto) {
         // 중복 체크
@@ -45,19 +50,15 @@ public class MemberService {
         memberRepository.save(member);
     }
 
-
     public Member findMemberById(Long id) {
         return memberRepository.findById(id).orElseThrow(() -> new IllegalStateException("찾을 수 없는 사용자입니다"));
     }
 
     public LoginResponse login(String loginId, String password) {
 
-        //디버깅용
-        System.out.println("현재 비밀번호 인코딩된 값"+passwordEncoder.encode(password));
-
         try {
             //AuthenticationManager 인증 처리
-            Authentication authentication = authenticationManager.authenticate(
+            Authentication authentication = memberAuthManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginId, password)
             );
 

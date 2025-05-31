@@ -1,5 +1,6 @@
 package edu.sookmyung.talktitude.config.jwt;
 
+import edu.sookmyung.talktitude.member.model.BaseUser;
 import edu.sookmyung.talktitude.member.model.Member;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
@@ -23,19 +24,19 @@ public class TokenProvider {
     private final JwtProperties jwtProperties;
 
     //액세스 토큰 생성 메서드
-    public String generateAccessToken(Member member) {
+    public String generateAccessToken(BaseUser baseUser) {
         Date now = new Date();
-        return makeToken(new Date(now.getTime()+Duration.ofHours(2).toMillis()),member,"ACCESS");
+        return makeToken(new Date(now.getTime()+Duration.ofHours(2).toMillis()),baseUser,"ACCESS");
     }
 
     //리프레쉬 토큰 생성 메서드
-    public String generateRefreshToken(Member member) {
+    public String generateRefreshToken(BaseUser baseUser) {
         Date now = new Date();
-        return makeToken(new Date(now.getTime()+Duration.ofDays(14).toMillis()),member,"REFRESH");
+        return makeToken(new Date(now.getTime()+Duration.ofDays(14).toMillis()),baseUser,"REFRESH");
     }
 
     //jwt 토큰 생성 메서드
-    private String makeToken(Date expiry, Member member, String tokenType){
+    private String makeToken(Date expiry, BaseUser baseUser, String tokenType){
         Date now = new Date();
 
         return Jwts.builder()
@@ -43,9 +44,10 @@ public class TokenProvider {
                 .setIssuer(jwtProperties.getIssuer())
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .setSubject(member.getUsername())
-                .claim("id",member.getId())
+                .setSubject(baseUser.getUsername())
+                .claim("id",baseUser.getId())
                 .claim("type",tokenType)
+                .claim("userType",baseUser.getUserType())
                 .signWith(SignatureAlgorithm.HS256,jwtProperties.getSecretKey())
                 .compact();
     }
@@ -72,12 +74,17 @@ public class TokenProvider {
     }
 
     //토큰 기반으로 유저 ID 가져오는 메소드
-    public Long getMemberId(String token){
+    public Long getUserId(String token){
         Claims claims = getClaims(token);
 
         return claims.get("id",Long.class);
     }
 
+    // 토큰 타입을 가져오는 메서드
+    public String getUserType(String token){
+        Claims claims = getClaims(token);
+        return claims.get("userType",String.class);
+    }
     //token에서 클레임 정보 추출 메서드
     private Claims getClaims(String token){
         return Jwts.parser()

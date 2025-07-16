@@ -28,9 +28,9 @@ public class ChatSession {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-//    @OneToOne
-//    @JoinColumn(name="order_id",nullable=false)
-//    private Order order;
+    @ManyToOne
+    @JoinColumn(name = "order_id") // nullable = true
+    private Order order; // 선택한 주문 (없을 수도 있음)
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

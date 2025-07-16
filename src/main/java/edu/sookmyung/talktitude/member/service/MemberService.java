@@ -77,6 +77,7 @@ public class MemberService {
         } catch (UsernameNotFoundException e) {
             throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
         } catch (Exception e) {
+            e.printStackTrace();  // 로그 확인용
             throw new RuntimeException("로그인 처리 중 오류가 발생했습니다.");
         }
     }

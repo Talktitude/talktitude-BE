@@ -1,5 +1,6 @@
 package edu.sookmyung.talktitude.chat.service;
 
+import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
 import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
@@ -13,10 +14,10 @@ import edu.sookmyung.talktitude.client.repository.ClientRepository;
 import edu.sookmyung.talktitude.client.repository.OrderRepository;
 import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class ChatService {
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
 
+    // 채팅 세션 생성
     @Transactional
     public Long createChatSession(CreateSessionRequest request) {
         Client client = clientRepository.findById(request.getClientId())
@@ -77,6 +79,21 @@ public class ChatService {
                     lastMessageTime
             );
         }).toList();
+    }
+
+    // 채팅 세션 정보 조회
+    @Transactional
+    public ChatSessionDetailDto getChatSessionDetail(Long sessionId, Long memberId) {
+        ChatSession session = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 채팅 세션이 존재하지 않습니다."));
+
+        // 상담원이 이 세션의 상담원인지 검증
+        if (!session.getMember().getId().equals(memberId)) {
+            throw new AccessDeniedException("해당 채팅 세션에 접근 권한이 없습니다.");
+        }
+
+        Client client = session.getClient();
+        return new ChatSessionDetailDto(session, client);
     }
 }
 

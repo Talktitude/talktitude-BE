@@ -1,5 +1,6 @@
 package edu.sookmyung.talktitude.chat.controller;
 
+import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
 import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
@@ -24,7 +25,7 @@ public class ChatController {
     }
 
     // 상담 세션 생성
-    @PostMapping
+    @PostMapping("/sessions")
     public ResponseEntity<String> createSession(@RequestBody CreateSessionRequest request) {
         Long sessionId = chatService.createChatSession(request);
         return ResponseEntity.ok("상담 세션이 생성되었습니다. ID: " + sessionId);
@@ -38,6 +39,16 @@ public class ChatController {
     ) {
         List<ChatSessionDto> result = chatService.getChatSessionsForMember(member.getId(), status);
         return ResponseEntity.ok(result);
+    }
+
+    // 채팅 세션 정보 조회
+    @GetMapping("/sessions/{sessionId}")
+    public ResponseEntity<ChatSessionDetailDto> getChatSessionDetail(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal Member member
+    ) {
+        ChatSessionDetailDto session = chatService.getChatSessionDetail(sessionId, member.getId());
+        return ResponseEntity.ok(session);
     }
 
 }

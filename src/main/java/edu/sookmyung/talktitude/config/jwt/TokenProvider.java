@@ -1,7 +1,10 @@
 package edu.sookmyung.talktitude.config.jwt;
 
+import edu.sookmyung.talktitude.client.service.ClientService;
 import edu.sookmyung.talktitude.member.model.BaseUser;
 import edu.sookmyung.talktitude.member.model.Member;
+import edu.sookmyung.talktitude.member.repository.MemberRepository;
+import edu.sookmyung.talktitude.member.service.MemberService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
@@ -22,6 +25,7 @@ import java.util.Set;
 public class TokenProvider {
 
     private final JwtProperties jwtProperties;
+    private final MemberRepository memberRepository;
 
     //액세스 토큰 생성 메서드
     public String generateAccessToken(BaseUser baseUser) {
@@ -64,29 +68,36 @@ public class TokenProvider {
         }
     }
 
-    //토큰 기반으로 인증 정보를 가져오는 메소드
-    public Authentication getAuthentication(String token){
+    // 토큰으로부터 인증 객체 반환
+    public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token);
-        Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+        Long userId = claims.get("id", Long.class);
+        String userType = claims.get("userType", String.class);
 
-        //토큰 기반으로 인증 정보(Authentication 객체) 생성.
-        return new UsernamePasswordAuthenticationToken(new org.springframework.security.core.userdetails.User(claims.getSubject(),"",authorities),token,authorities);
+        // Member 조회
+        if ("Member".equalsIgnoreCase(userType)) {
+            Member member = memberRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+            Set<SimpleGrantedAuthority> authorities =
+                    Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+            return new UsernamePasswordAuthenticationToken(member, token, authorities);
+        }
+
+        throw new RuntimeException("지원하지 않는 userType입니다: " + userType);
     }
 
-    //토큰 기반으로 유저 ID 가져오는 메소드
-    public Long getUserId(String token){
-        Claims claims = getClaims(token);
-
-        return claims.get("id",Long.class);
+    // 토큰에서 사용자 ID 추출
+    public Long getUserId(String token) {
+        return getClaims(token).get("id", Long.class);
     }
 
-    // 토큰 타입을 가져오는 메서드
-    public String getUserType(String token){
-        Claims claims = getClaims(token);
-        return claims.get("userType",String.class);
+    // 토큰에서 사용자 타입 추출
+    public String getUserType(String token) {
+        return getClaims(token).get("userType", String.class);
     }
-    //token에서 클레임 정보 추출 메서드
-    private Claims getClaims(String token){
+
+    // 토큰에서 Claims 추출
+    private Claims getClaims(String token) {
         return Jwts.parser()
                 .setSigningKey(jwtProperties.getSecretKey())
                 .parseClaimsJws(token)

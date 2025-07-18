@@ -7,13 +7,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 @Entity
+@Table(
+        name = "refresh_token",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"user_id", "user_type"})
+        }
+)
 public class RefreshToken {
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="user_id",nullable=false,unique=true)
+    @Column(name="user_id",nullable=false)
     private Long userId;
 
     @Column(name="refresh_token",nullable = false)

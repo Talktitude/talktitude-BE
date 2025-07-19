@@ -111,5 +111,18 @@ public class ChatService {
         Client client = session.getClient();
         return new ChatSessionDetailDto(session, client);
     }
+
+    // 상담 종료
+    @Transactional
+    public void finishChatSession(Long sessionId, Long memberId) {
+        ChatSession session = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 채팅 세션이 존재하지 않습니다."));
+
+        if (!session.getMember().getId().equals(memberId)) {
+            throw new AccessDeniedException("해당 채팅 세션을 종료할 권한이 없습니다.");
+        }
+
+        session.finish(); // 종료로 상태 변경
+    }
 }
 

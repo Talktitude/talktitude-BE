@@ -1,5 +1,6 @@
 package edu.sookmyung.talktitude.chat.service;
 
+import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
 import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
@@ -13,11 +14,12 @@ import edu.sookmyung.talktitude.client.repository.ClientRepository;
 import edu.sookmyung.talktitude.client.repository.OrderRepository;
 import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -29,6 +31,7 @@ public class ChatService {
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
 
+    // 채팅 세션 생성
     @Transactional
     public Long createChatSession(CreateSessionRequest request) {
         Client client = clientRepository.findById(request.getClientId())
@@ -59,24 +62,54 @@ public class ChatService {
     // 상담원 상담 목록 조회 (상담원 ID 및 상태 필터)
     @Transactional
     public List<ChatSessionDto> getChatSessionsForMember(Long memberId, String statusStr) {
-        Status status = statusStr.equalsIgnoreCase("ALL") ? null : Status.valueOf(statusStr);
-        List<ChatSession> sessions = chatSessionRepository.findByMemberAndStatus(memberId, status);
+        List<ChatSession> sessions;
 
-        return sessions.stream().map(session -> {
-            // 해당 세션의 마지막 메시지 시간 조회
-            LocalDateTime lastMessageTime = chatMessageRepository
-                    .findTopByChatSessionOrderByCreatedAtDesc(session)
-                    .map(ChatMessage::getCreatedAt)
-                    .orElse(session.getCreatedAt());
+        if ("ALL".equalsIgnoreCase(statusStr)) {
+            // 상태 필터 없이 전체 조회
+            sessions = chatSessionRepository.findByMemberId(memberId);
+        } else {
+            // 문자열 -> Status enum 변환
+            Status status;
+            try {
+                status = Status.valueOf(statusStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("status 값은 IN_PROGRESS 또는 FINISHED 여야 합니다.");
+            }
+            sessions = chatSessionRepository.findByMemberAndStatus(memberId, status);
+        }
 
-            return new ChatSessionDto(
-                    session.getId(),
-                    session.getClient().getLoginId(),
-                    session.getClient().getPhone(),
-                    null, // profileImageUrl, 이후 구현 예정
-                    lastMessageTime
-            );
-        }).toList();
+        return sessions.stream()
+                .map(session -> {
+                    LocalDateTime lastMessageTime = chatMessageRepository
+                            .findTopByChatSessionOrderByCreatedAtDesc(session)
+                            .map(ChatMessage::getCreatedAt)
+                            .orElse(session.getCreatedAt());
+
+                    return new ChatSessionDto(
+                            session.getId(),
+                            session.getClient().getLoginId(),
+                            session.getClient().getPhone(),
+                            null, // profileImageUrl, 이후 구현 예정
+                            lastMessageTime
+                    );
+                })
+                .sorted(Comparator.comparing(ChatSessionDto::getLastMessageTime).reversed())  // 최신순 정렬
+                .toList();
+    }
+
+    // 채팅 세션 정보 조회
+    @Transactional
+    public ChatSessionDetailDto getChatSessionDetail(Long sessionId, Long memberId) {
+        ChatSession session = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 채팅 세션이 존재하지 않습니다."));
+
+        // 상담원이 이 세션의 상담원인지 검증
+        if (!session.getMember().getId().equals(memberId)) {
+            throw new AccessDeniedException("해당 채팅 세션에 접근 권한이 없습니다.");
+        }
+
+        Client client = session.getClient();
+        return new ChatSessionDetailDto(session, client);
     }
 }
 

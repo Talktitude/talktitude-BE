@@ -3,13 +3,10 @@ package edu.sookmyung.talktitude.chat.controller;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
 import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
-import edu.sookmyung.talktitude.chat.model.ChatSession;
 import edu.sookmyung.talktitude.chat.service.ChatService;
 import edu.sookmyung.talktitude.member.model.Member;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,6 +46,16 @@ public class ChatController {
     ) {
         ChatSessionDetailDto session = chatService.getChatSessionDetail(sessionId, member.getId());
         return ResponseEntity.ok(session);
+    }
+
+    // 상담 종료
+    @PatchMapping("/sessions/{sessionId}/finish")
+    public ResponseEntity<Void> finishSession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal Member member
+    ) {
+        chatService.finishChatSession(sessionId, member.getId());
+        return ResponseEntity.ok().build();
     }
 
 }

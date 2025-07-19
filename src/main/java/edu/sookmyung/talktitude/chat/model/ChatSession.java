@@ -38,4 +38,8 @@ public class ChatSession {
     @Enumerated(EnumType.STRING) // ← enum 값을 문자열로 저장
     private Status status;
 
+    public void finish() {
+        this.status = Status.FINISHED;
+    }
+
 }

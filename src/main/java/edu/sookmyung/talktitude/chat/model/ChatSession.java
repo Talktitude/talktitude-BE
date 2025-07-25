@@ -31,13 +31,17 @@ public class ChatSession {
     private Client client;
 
     @ManyToOne
-    @JoinColumn(name="order_id",nullable=false)
-    private Order order;
+    @JoinColumn(name = "order_id") // nullable = true
+    private Order order; // 선택한 주문 (없을 수도 있음)
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    public void finish() {
+        this.status = Status.FINISHED;
+    }
 
 }

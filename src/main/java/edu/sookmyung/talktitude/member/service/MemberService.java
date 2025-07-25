@@ -1,5 +1,7 @@
 package edu.sookmyung.talktitude.member.service;
 
+import edu.sookmyung.talktitude.common.exception.BaseException;
+import edu.sookmyung.talktitude.common.exception.ErrorCode;
 import edu.sookmyung.talktitude.member.dto.MemberDto;
 import edu.sookmyung.talktitude.config.jwt.TokenProvider;
 import edu.sookmyung.talktitude.member.dto.LoginResponse;
@@ -52,7 +54,7 @@ public class MemberService {
     }
 
     public Member findMemberById(Long id) {
-        return memberRepository.findById(id).orElseThrow(() -> new IllegalStateException("찾을 수 없는 사용자입니다"));
+        return memberRepository.findById(id).orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
     public LoginResponse login(String loginId, String password) {
@@ -73,12 +75,9 @@ public class MemberService {
             return new LoginResponse(accessToken, refreshToken.getRefreshToken());
 
         } catch (BadCredentialsException e) {
-            throw new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.");
+            throw new BaseException(ErrorCode.WRONG_CREDENTIALS);
         } catch (UsernameNotFoundException e) {
-            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
-        } catch (Exception e) {
-            throw new RuntimeException("로그인 처리 중 오류가 발생했습니다.");
+            throw new BaseException(ErrorCode.AUTHENTICATION_FAILED);
         }
     }
-
  }

@@ -1,7 +1,10 @@
 package edu.sookmyung.talktitude.config.jwt;
 
+import edu.sookmyung.talktitude.client.model.Client;
+import edu.sookmyung.talktitude.client.repository.ClientRepository;
 import edu.sookmyung.talktitude.member.model.BaseUser;
 import edu.sookmyung.talktitude.member.model.Member;
+import edu.sookmyung.talktitude.member.repository.MemberRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
@@ -22,6 +25,8 @@ import java.util.Set;
 public class TokenProvider {
 
     private final JwtProperties jwtProperties;
+    private final MemberRepository memberRepository;
+    private final ClientRepository clientRepository;
 
     //액세스 토큰 생성 메서드
     public String generateAccessToken(BaseUser baseUser) {
@@ -64,13 +69,28 @@ public class TokenProvider {
         }
     }
 
-    //토큰 기반으로 인증 정보를 가져오는 메소드
-    public Authentication getAuthentication(String token){
+    // 토큰으로부터 인증 객체 반환
+    public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token);
-        Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+        Long userId = claims.get("id", Long.class);
+        String userType = claims.get("userType", String.class);
 
-        //토큰 기반으로 인증 정보(Authentication 객체) 생성.
-        return new UsernamePasswordAuthenticationToken(new org.springframework.security.core.userdetails.User(claims.getSubject(),"",authorities),token,authorities);
+        // Member 조회
+        if ("Member".equalsIgnoreCase(userType)) {
+            Member member = memberRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+            Set<SimpleGrantedAuthority> authorities =
+                    Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+            return new UsernamePasswordAuthenticationToken(member, token, authorities);
+        }else if ("Client".equalsIgnoreCase(userType)) {
+            Client client = clientRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다."));
+            Set<SimpleGrantedAuthority> authorities =
+                    Collections.singleton(new SimpleGrantedAuthority("ROLE_CLIENT"));
+            return new UsernamePasswordAuthenticationToken(client, token, authorities);
+        }
+
+        throw new RuntimeException("지원하지 않는 userType입니다: " + userType);
     }
 
     //토큰 기반으로 유저 ID 가져오는 메소드

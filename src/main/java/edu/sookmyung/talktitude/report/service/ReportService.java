@@ -43,7 +43,7 @@ public class ReportService {
     private final ChatSessionRepository chatSessionRepository;
     private final GPTProperties gptProperties;
     private final ObjectMapper objectMapper;
-    private final MemoService memoService;
+    //private final MemoService memoService;
 
 
     @Transactional
@@ -163,9 +163,10 @@ public class ReportService {
     public ReportDetail getReportDetail(Long reportId) {
         Report report = reportRepository.findById(reportId).orElseThrow(() -> new BaseException(ErrorCode.REPORT_NOT_FOUND));
 
-        List<ReportMemo> reportMemos = memoService.getMemos(report.getId());
+        //List<ReportMemo> reportMemos = memoService.getMemos(report.getId());
 
-        return ReportDetail.convertToReportDetail(report,reportMemos);
+        //return ReportDetail.convertToReportDetail(report,reportMemos);
+        return ReportDetail.convertToReportDetail(report,Collections.emptyList());
     }
 
     //사용자 이름 검색을 통한 상담 목록 조회

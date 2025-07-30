@@ -8,9 +8,11 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.messaging.handler.annotation.support.MethodArgumentTypeMismatchException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -30,6 +32,15 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ErrorCode.AUTHENTICATION_FAILED));
     }
 
+    //잘못된 메소드 매핑
+    @ExceptionHandler(value={HttpRequestMethodNotSupportedException.class})
+    public ResponseEntity<?> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e){
+        log.error("지원하지 않는 HTTP 메서드입니다 : {} ",e.getMessage());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ApiResponse.error(ErrorCode.METHOD_NOT_ALLOWED));
+    }
+
+
     @ExceptionHandler(value={BadCredentialsException.class})
     public ResponseEntity<?> handleBadCredentials(UsernameNotFoundException e){
         log.error("사용자 인증 실패(BadCredentialsException) : {} ",e.getMessage());
@@ -37,6 +48,12 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ErrorCode.AUTHENTICATION_FAILED));
     }
 
+    //잘못된 경로 매핑
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<?> handleNoResourceFound(NoResourceFoundException e) {
+        log.error("잘못된 경로 매핑 : {} ",e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ErrorCode.RESOURCE_NOT_FOUND));
+    }
 
     // Spring MVC 필수 예외들
     @ExceptionHandler({

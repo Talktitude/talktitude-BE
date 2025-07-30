@@ -4,6 +4,7 @@ import edu.sookmyung.talktitude.chat.model.ChatSession;
 import edu.sookmyung.talktitude.member.model.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @Entity
+@Builder
 public class Memo {
 
     @Id
@@ -33,8 +35,20 @@ public class Memo {
     @Column(name="is_deleted",nullable=false)
     private boolean isDeleted=false;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name="created_at")
+    private LocalDateTime createdAt= LocalDateTime.now();
 
     //memo update 기능을 위해 명시.
-    private LocalDateTime updatedAt;
+    @Column(name="updated_at")
+    private LocalDateTime updatedAt =  LocalDateTime.now();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="memo_phase",nullable=false)
+    private MemoPhase memoPhase;
+
+    public void updateMemo(String newMemoText) {
+       this.memoText = newMemoText;
+       this.updatedAt = LocalDateTime.now();
+    }
+
 }

@@ -38,6 +38,9 @@ public abstract class BaseUser implements UserDetails {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
     public abstract String getUserType();
 
     //사용자의 id를 반환(고유한 값)

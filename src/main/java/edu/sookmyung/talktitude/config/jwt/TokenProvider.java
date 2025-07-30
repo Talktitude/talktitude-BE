@@ -1,5 +1,8 @@
 package edu.sookmyung.talktitude.config.jwt;
 
+
+import edu.sookmyung.talktitude.client.model.Client;
+import edu.sookmyung.talktitude.client.repository.ClientRepository;
 import edu.sookmyung.talktitude.client.service.ClientService;
 import edu.sookmyung.talktitude.member.model.BaseUser;
 import edu.sookmyung.talktitude.member.model.Member;
@@ -26,6 +29,8 @@ public class TokenProvider {
 
     private final JwtProperties jwtProperties;
     private final MemberRepository memberRepository;
+    private final ClientRepository clientRepository;
+
 
     //액세스 토큰 생성 메서드
     public String generateAccessToken(BaseUser baseUser) {
@@ -81,6 +86,12 @@ public class TokenProvider {
             Set<SimpleGrantedAuthority> authorities =
                     Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
             return new UsernamePasswordAuthenticationToken(member, token, authorities);
+        }else if ("Client".equalsIgnoreCase(userType)) {
+            Client client = clientRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("고객을 찾을 수 없습니다."));
+            Set<SimpleGrantedAuthority> authorities =
+                    Collections.singleton(new SimpleGrantedAuthority("ROLE_CLIENT"));
+            return new UsernamePasswordAuthenticationToken(client, token, authorities); 
         }
 
         throw new RuntimeException("지원하지 않는 userType입니다: " + userType);

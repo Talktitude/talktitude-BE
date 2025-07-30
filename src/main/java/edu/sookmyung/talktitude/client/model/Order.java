@@ -1,11 +1,13 @@
 package edu.sookmyung.talktitude.client.model;
 
+import edu.sookmyung.talktitude.chat.model.ChatSession;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor
@@ -30,4 +32,7 @@ public class Order {
 
     @Column(name = "order_number", nullable = false, unique = true, length = 10)
     private String orderNumber;
+
+    @OneToMany(mappedBy = "order")
+    private List<ChatSession> chatSessions;
 }

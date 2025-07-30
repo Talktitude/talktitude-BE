@@ -20,11 +20,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ChatService {
+
     private final ChatSessionRepository chatSessionRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ClientRepository clientRepository;
@@ -124,5 +126,10 @@ public class ChatService {
 
         session.finish(); // 종료로 상태 변경
     }
+  
+ 
+      public List<ChatMessage> findChatMessage(Long sessionId) {
+        List<ChatMessage> chatMessage = chatMessageRepository.findByChatSessionId(sessionId);
+        return chatMessage;
+    }
 }
-

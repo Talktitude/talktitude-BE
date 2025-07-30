@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,6 +18,13 @@ public class Client extends BaseUser{
 
     @Column(nullable = false, length = 100)
     private String address;
+
+    @OneToOne(mappedBy = "client")
+    private Point point;
+
+    @OneToMany(mappedBy = "client")
+    private List<Coupon> coupons;
+
 
     public String getUserType() {
         return "Client";

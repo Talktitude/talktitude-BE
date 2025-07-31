@@ -44,4 +44,20 @@ public class ClientController {
         return ResponseEntity.ok(ApiResponse.ok(clientInfo));
     }
 
+    //오른쪽 정보 패널 -> 주문 정보 조회
+    @GetMapping("/{sessionId}/orders")
+    public ResponseEntity<ApiResponse<List<OrderInfo>>> getOrder(@AuthenticationPrincipal Member member, @PathVariable Long sessionId){
+
+        List<OrderInfo> orderInfoList = clientService.getOrderById(sessionId, member); //chatsession -> client -> order를 찾는 방식
+        return ResponseEntity.ok(ApiResponse.ok(orderInfoList));
+    }
+
+    //오른쪽 정보 패널 -> 상세 주문 정보 조회
+    @GetMapping("/{sessionId}/orders/{orderNumber}")
+    public ResponseEntity<ApiResponse<OrderDetailInfo>> getOrderDetail(@AuthenticationPrincipal Member member,  @PathVariable Long sessionId,
+                                                                       @PathVariable String orderNumber) {
+        OrderDetailInfo orderDetailInfo = clientService.getOrderDetailById(orderNumber,member,sessionId);
+        return ResponseEntity.ok(ApiResponse.ok(orderDetailInfo));
+    }
+
 }

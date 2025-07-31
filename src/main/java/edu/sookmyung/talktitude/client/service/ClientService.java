@@ -130,5 +130,48 @@ public class ClientService {
                 .orElseThrow(() -> new BaseException(ErrorCode.CLIENT_NOT_FOUND));
     }
 
+    //오른쪽 정보 패널 - 주문 정보 조회 메서드(채팅에 참가한 고객용)
+    @Transactional
+    public List<OrderInfo> getOrderById(Long sessionId, Member member) {
+
+        Client client = validateAndGetClient(sessionId, member);
+
+        //고객의 주문 내역을 전부 조회
+        List<Order> orders = orderRepository.findByClientLoginId(client.getLoginId());
+
+        // 배달 정보와 함께 orderInfo dto 구성
+        return orders.stream()
+                .map(order->{
+                    OrderDelivery orderDelivery = orderDeliveryRepository.findByOrder(order).orElseThrow(() -> new BaseException(ErrorCode.ORDER_DELIVERY_NOT_FOUND));
+                    return OrderInfo.convertToOrderInfo(order, orderDelivery);
+                }).collect(Collectors.toList());
+    }
+
+
+    //오른쪽 정보 패널 - 주문 상세 조회 메서드
+    @Transactional
+    public OrderDetailInfo getOrderDetailById(String orderNumber, Member member, Long sessionId) {
+
+        Client client = validateAndGetClient(sessionId, member);
+
+        //특정 주문 내역의 상세 주문 정보 조회
+        Order order = orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new BaseException(ErrorCode.ORDER_NOT_FOUND));
+
+        //해당 주문이 현재 채팅 세션의 클라이언트 소유인지 검증
+        if(!order.getClient().getLoginId().equals(client.getLoginId())) {
+            throw new BaseException(ErrorCode.ORDER_ACCESS_DENIED);
+        }
+
+        OrderDelivery orderDelivery = orderDeliveryRepository.findByOrder(order)
+                .orElseThrow(() -> new BaseException(ErrorCode.ORDER_DELIVERY_NOT_FOUND));
+
+        OrderPayment orderPayment = orderPaymentRepository.findByOrder(order)
+                .orElseThrow(() -> new BaseException(ErrorCode.ORDER_PAYMENT_NOT_FOUND));
+        List<OrderMenu> orderMenus = orderMenuRepository.findByOrder(order);
+
+        return OrderDetailInfo.convertToOrderDetailInfo(order, orderDelivery, orderPayment, orderMenus);
+    }
+
 
 }

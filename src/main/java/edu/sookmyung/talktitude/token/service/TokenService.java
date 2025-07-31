@@ -43,7 +43,7 @@ public class TokenService {
         return switch(userType){
             case "Member" -> memberService.findMemberById(userId);
             case "Client"-> clientService.findClientById(userId);
-            default -> throw new BaseException(ErrorCode.WRONG_USRETYPE);
+            default -> throw new BaseException(ErrorCode.WRONG_USERTYPE);
         };
     }
 }

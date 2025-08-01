@@ -21,7 +21,6 @@ public enum ErrorCode {
     // Spring Security 관련
     AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED,"AUTHENTICATION_FAILED","사용자 인증에 실패하였습니다."),
     WRONG_CREDENTIALS(HttpStatus.UNAUTHORIZED,"WRONG_CREDENTIALS","아이디 또는 비밀번호가 올바르지 않습니다."),
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED,"UNAUTHORIZED","인증되지 않은 사용자입니다."),
 
     //Client 관련
     CLIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CLIENT_001", "고객 정보를 찾을 수 없습니다."),
@@ -38,7 +37,6 @@ public enum ErrorCode {
     ORDER_PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_O03", "결제 정보를 찾을 수 없습니다."),
     ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ORDER_O04", "해당 주문에 접근할 권한이 없습니다."),
 
-
     //Report 관련
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT_001", "리포트 정보를 찾을 수 없습니다."),
     REPORT_JSON_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "REPORT_002","리포트 생성 중 JSON 처리에 실패하였습니다"),
@@ -49,7 +47,7 @@ public enum ErrorCode {
     MEMO_ACCESS_DENIED(HttpStatus.FORBIDDEN,"MEMO_002","메모 소유주가 아닙니다"),
 
     //Spring MVC 관련
-    INVALID_INPUT(HttpStatus.BAD_REQUEST, "INVALID_INPUT","잘못된 요청입니다."),
+    INVALID_REQUEST(HttpStatus.BAD_REQUEST, "INVALID_REQUEST","요청 형식이 잘못되었습니다."),
 
     //최종 안전망
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR","예상치 못한 오류입니다");

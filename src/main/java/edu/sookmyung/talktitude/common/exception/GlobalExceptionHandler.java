@@ -32,14 +32,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ErrorCode.AUTHENTICATION_FAILED));
     }
 
-    //잘못된 메소드 매핑
-    @ExceptionHandler(value={HttpRequestMethodNotSupportedException.class})
-    public ResponseEntity<?> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e){
-        log.error("지원하지 않는 HTTP 메서드입니다 : {} ",e.getMessage());
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
-                .body(ApiResponse.error(ErrorCode.METHOD_NOT_ALLOWED));
-    }
-
 
     @ExceptionHandler(value={BadCredentialsException.class})
     public ResponseEntity<?> handleBadCredentials(UsernameNotFoundException e){
@@ -55,15 +47,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ErrorCode.RESOURCE_NOT_FOUND));
     }
 
+    //잘못된 메소드 매핑
+    @ExceptionHandler(value={HttpRequestMethodNotSupportedException.class})
+    public ResponseEntity<?> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e){
+        log.error("지원하지 않는 HTTP 메서드입니다 : {} ",e.getMessage());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ApiResponse.error(ErrorCode.METHOD_NOT_ALLOWED));
+    }
+
     // Spring MVC 필수 예외들
     @ExceptionHandler({
-        MethodArgumentNotValidException.class,
-        HttpMessageNotReadableException.class,
-        MethodArgumentTypeMismatchException.class
+            MethodArgumentNotValidException.class,
+            HttpMessageNotReadableException.class,
+            MethodArgumentTypeMismatchException.class
     })
     public ResponseEntity<ApiResponse<Void>> handleSpringMvcExceptions(Exception e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(ErrorCode.INVALID_INPUT));
+                .body(ApiResponse.error(ErrorCode.INVALID_REQUEST));
     }
 
     // 최종 안전망

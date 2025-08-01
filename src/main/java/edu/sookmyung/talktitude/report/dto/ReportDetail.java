@@ -1,5 +1,6 @@
 package edu.sookmyung.talktitude.report.dto;
 
+import edu.sookmyung.talktitude.memo.dto.MemoResponse;
 import edu.sookmyung.talktitude.report.model.Category;
 import edu.sookmyung.talktitude.report.model.Report;
 import lombok.AllArgsConstructor;
@@ -26,10 +27,10 @@ public class ReportDetail {
     private String summaryText;
 
     // 상담 메모
-    private List<ReportMemo> memos = new ArrayList<>();
+    private List<MemoResponse> memos = new ArrayList<>();
 
 
-    public static ReportDetail convertToReportDetail(Report report, List<ReportMemo> memos) {
+    public static ReportDetail convertToReportDetail(Report report, List<MemoResponse> memos) {
         return new ReportDetail(
                 report.getId(),
                 report.getChatSession().getClient().getName(),

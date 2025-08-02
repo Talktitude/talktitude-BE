@@ -13,12 +13,21 @@ import edu.sookmyung.talktitude.common.exception.ErrorCode;
 import edu.sookmyung.talktitude.config.jwt.TokenProvider;
 import edu.sookmyung.talktitude.member.dto.LoginResponse;
 import edu.sookmyung.talktitude.member.model.Member;
+import edu.sookmyung.talktitude.memo.dto.MemoResponse;
+import edu.sookmyung.talktitude.memo.repository.MemoRepository;
+import edu.sookmyung.talktitude.report.dto.ReportDetailByClient;
+import edu.sookmyung.talktitude.report.dto.ReportListByClient;
+import edu.sookmyung.talktitude.report.model.MemoPhase;
+import edu.sookmyung.talktitude.report.model.Report;
+import edu.sookmyung.talktitude.report.repository.ReportRepository;
 import edu.sookmyung.talktitude.token.model.RefreshToken;
 import edu.sookmyung.talktitude.token.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -50,6 +59,8 @@ public class ClientService {
     private final OrderPaymentRepository orderPaymentRepository;
     private final OrderMenuRepository orderMenuRepository;
     private final ChatSessionRepository chatSessionRepository;
+    private final ReportRepository reportRepository;
+    private final MemoRepository memoRepository;
 
 
 
@@ -110,28 +121,8 @@ public class ClientService {
         return ClientInfo.convertToClientInfo(client);
     }
 
-
-    // 채팅 세션에 참가한 회원인지 검증
-    public boolean isChatSessionParticipant(Member member, ChatSession chatSession) {
-        log.info("현재 로그인한 id:{}, 채팅 세션에 참가한 id:{}",member.getId(),chatSession.getMember().getId());
-        return Objects.equals(member.getId(), chatSession.getMember().getId());
-    }
-
-    //검증 이후 Client를 반환하는 메서드
-    private Client validateAndGetClient(Long sessionId, Member member) {
-        ChatSession chatSession = chatSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
-
-        if(!isChatSessionParticipant(member, chatSession)){
-            throw new BaseException(ErrorCode.CHAT_SESSION_ACCESS_DENIED);
-        }
-
-        return clientRepository.findById(chatSession.getClient().getId())
-                .orElseThrow(() -> new BaseException(ErrorCode.CLIENT_NOT_FOUND));
-    }
-
     //오른쪽 정보 패널 - 주문 정보 조회 메서드(채팅에 참가한 고객용)
-    @Transactional
+    @Transactional(readOnly = true)
     public List<OrderInfo> getOrderById(Long sessionId, Member member) {
 
         Client client = validateAndGetClient(sessionId, member);
@@ -149,7 +140,7 @@ public class ClientService {
 
 
     //오른쪽 정보 패널 - 주문 상세 조회 메서드
-    @Transactional
+    @Transactional(readOnly = true)
     public OrderDetailInfo getOrderDetailById(String orderNumber, Member member, Long sessionId) {
 
         Client client = validateAndGetClient(sessionId, member);
@@ -173,5 +164,68 @@ public class ClientService {
         return OrderDetailInfo.convertToOrderDetailInfo(order, orderDelivery, orderPayment, orderMenus);
     }
 
+    // 오른쪽 정보 패널 -> 고객별 상담 목록 조회
+    @Transactional(readOnly = true)
+    public Page<ReportListByClient> getReportsByClient(Long sessionId, Member member, Pageable pageable) {
+        Client client = validateAndGetClient(sessionId, member);
+        return reportRepository.findByClientLoginId(client.getLoginId(),pageable)
+                .map(ReportListByClient::convertToReportListByClient);
 
+    }
+
+    // 오른쪽 정보 패널 -> 고객별 상담 상세 조회
+    @Transactional(readOnly = true)
+    public ReportDetailByClient getReportDetailByClient(Long reportId,Long sessionId, Member member) {
+
+        Client client = validateAndGetClient(sessionId, member);
+        Report report = reportRepository.findById(reportId).orElseThrow(() -> new BaseException(ErrorCode.REPORT_NOT_FOUND));
+        //해당 리포트가 이 고객의 것인지 검증
+        if(!report.getChatSession().getClient().getLoginId().equals(client.getLoginId())) {
+            throw new BaseException(ErrorCode.UNAUTHORIZED_CLIENT_ACCESS);
+        }
+        return ReportDetailByClient.convertToReportDetailByClient(report);
+
+    }
+
+    //오른쪽 정보 패널 -> 상담 중에 작성된 메모 조회
+    @Transactional(readOnly = true)
+    public List<MemoResponse> getDuringChatUserMemos(Long sessionId, Member currentMember) {
+
+        ChatSession chatSession = validateAndGetChatSession( sessionId, currentMember);
+        //현재 로그인 사용자 + 상담 중 작성된 메모 기준으로 조회
+        return memoRepository.findByChatSessionAndMemberAndMemoPhase(chatSession,currentMember, MemoPhase.DURING_CHAT)
+                .stream()
+                .map(MemoResponse::convertToMemoResponse)
+                .collect(Collectors.toList());
+    }
+
+
+    // 채팅 세션에 참가한 회원인지 검증
+    public boolean isChatSessionParticipant(Member member, ChatSession chatSession) {
+        log.info("현재 로그인한 id:{}, 채팅 세션에 참가한 id:{}",member.getId(),chatSession.getMember().getId());
+        return Objects.equals(member.getId(), chatSession.getMember().getId());
+    }
+
+    //검증 이후 Client를 반환하는 메서드
+    private Client validateAndGetClient(Long sessionId, Member member) {
+        ChatSession chatSession = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
+        if(!isChatSessionParticipant(member, chatSession)){
+            throw new BaseException(ErrorCode.CHAT_SESSION_ACCESS_DENIED);
+        }
+        return clientRepository.findById(chatSession.getClient().getId())
+                .orElseThrow(() -> new BaseException(ErrorCode.CLIENT_NOT_FOUND));
+    }
+
+    //검증 이후 ChatSession을 반환하는 메서드
+    private ChatSession validateAndGetChatSession(Long sessionId, Member member) {
+        ChatSession chatSession = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
+
+        if (!isChatSessionParticipant(member, chatSession)) {
+            throw new BaseException(ErrorCode.CHAT_SESSION_ACCESS_DENIED);
+        }
+
+        return chatSession;
+    }
 }

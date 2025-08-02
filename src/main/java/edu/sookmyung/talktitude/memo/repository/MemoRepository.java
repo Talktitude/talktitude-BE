@@ -8,11 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MemoRepository extends JpaRepository<Memo, Long> {
     List<Memo> findByChatSessionAndMemoPhase(ChatSession chatSession, MemoPhase memoPhase);
-    Memo findByChatSessionAndMemberAndMemoPhase(ChatSession chatSession, Member currentMember, MemoPhase memoPhase);
-    Memo findByChatSession(ChatSession chatSession);
+    List<Memo> findByChatSessionAndMemberAndMemoPhase(ChatSession chatSession, Member currentMember, MemoPhase memoPhase);
+    Optional<Memo> findDuringChatByChatSessionAndMemberAndMemoPhase(ChatSession chatSession, Member member, MemoPhase memoPhase);
+
 }
 

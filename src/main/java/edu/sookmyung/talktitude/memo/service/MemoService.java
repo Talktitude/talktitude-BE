@@ -11,9 +11,15 @@ import edu.sookmyung.talktitude.memo.repository.MemoRepository;
 import edu.sookmyung.talktitude.memo.dto.MemoRequest;
 import edu.sookmyung.talktitude.report.model.Memo;
 import edu.sookmyung.talktitude.report.model.MemoPhase;
+import edu.sookmyung.talktitude.report.model.Report;
+import edu.sookmyung.talktitude.report.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static edu.sookmyung.talktitude.memo.dto.MemoResponse.convertToMemoResponse;
 
@@ -24,6 +30,7 @@ public class MemoService {
 
     private final ChatSessionRepository chatSessionRepository;
     private final MemoRepository memoRepository;
+    private final ReportRepository reportRepository;
 
     //메모 생성 기능
     @Transactional
@@ -38,12 +45,12 @@ public class MemoService {
                 throw new BaseException(ErrorCode.CHAT_SESSION_ACCESS_DENIED);
             }
             //기존 메모가 있으면 업데이트, 없으면 생성
-            Memo exisexistingMemo = memoRepository.findByChatSessionAndMemberAndMemoPhase(
-                    chatSession, currentMember, MemoPhase.DURING_CHAT);
+            Memo existingMemo = memoRepository.findDuringChatByChatSessionAndMemberAndMemoPhase(
+                    chatSession, currentMember, MemoPhase.DURING_CHAT).orElse(null);
 
-            if(exisexistingMemo != null) {
-                exisexistingMemo.updateMemo(memo.getMemoText());
-                savedMemo = exisexistingMemo;
+            if(existingMemo != null) {
+                existingMemo.updateMemo(memo.getMemoText());
+                savedMemo = existingMemo;
             }else{
                 savedMemo = Memo.builder().member(currentMember).chatSession(chatSession).memoText(memo.getMemoText()).memoPhase(MemoPhase.DURING_CHAT).build();
             }
@@ -66,5 +73,59 @@ public class MemoService {
         memoRepository.delete(existingMemo);
     }
 
+    public List<MemoResponse> getAfterChatMemosForReport(Long sessionId) {
+        ChatSession chatSession = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
+
+
+        //상담 이후 작성된 메모 기준으로 조회
+        return memoRepository.findByChatSessionAndMemoPhase(chatSession, MemoPhase.AFTER_CHAT)
+                .stream()
+                .map(MemoResponse::convertToMemoResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<MemoResponse> getDuringChatMemosForReport(Long sessionId) {
+        ChatSession chatSession = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
+
+        //상담 중 작성된 메모 기준으로 조회
+        return memoRepository.findByChatSessionAndMemoPhase(chatSession, MemoPhase.DURING_CHAT)
+                .stream()
+                .map(MemoResponse::convertToMemoResponse)
+                .collect(Collectors.toList());
+    }
+
+    // 리포트에서 조회 가능한 전체 메모 -> 프론트에서는 타입별로 분류(memoPhase)
+    public List<MemoResponse> getMemos(Long reportId) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new BaseException(ErrorCode.REPORT_NOT_FOUND));
+        ChatSession chatSession = chatSessionRepository.findById(report.getChatSession().getId())
+                .orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
+
+        List<MemoResponse> reportMemoList = new ArrayList<>();
+        reportMemoList.addAll(getAfterChatMemosForReport(chatSession.getId()));
+        reportMemoList.addAll(getDuringChatMemosForReport(chatSession.getId()));
+
+        return reportMemoList;
+    }
+
+
+    //메인화면 오른쪽 패널에서 확인 가능한 상담 메모
+    @Transactional
+    public List<MemoResponse> getDuringChatUserMemos(Long sessionId, Member currentMember) {
+        ChatSession chatSession = chatSessionRepository.findById(sessionId).orElseThrow(()->new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
+
+        //세션 멤버와 현재 로그인 사용자가 같은지 검증
+        if(!chatSession.getMember().getLoginId().equals(currentMember.getLoginId())) {
+            throw new BaseException(ErrorCode.CHAT_SESSION_ACCESS_DENIED);
+        }
+
+        //현재 로그인 사용자 + 상담 중 작성된 메모 기준으로 조회
+        return memoRepository.findByChatSessionAndMemberAndMemoPhase(chatSession,currentMember, MemoPhase.DURING_CHAT)
+                .stream()
+                .map(MemoResponse::convertToMemoResponse)
+                .collect(Collectors.toList());
+    }
 
 }

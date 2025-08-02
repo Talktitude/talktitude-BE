@@ -30,20 +30,6 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    //고객별 상담 목록 조회
-    @GetMapping("/client/{sessionId}")
-    public ResponseEntity<PageResponse<ReportListByClient>> getReportListByClient(@PathVariable Long sessionId,@PageableDefault(size=10, sort="createdAt",direction = Sort.Direction.ASC) Pageable pageable, @AuthenticationPrincipal Member member) {
-        Page<ReportListByClient> reportListByClients = reportService.getReportsByClient(sessionId,pageable);
-        return ResponseEntity.ok(PageResponse.of(reportListByClients));
-    }
-
-    //고객별 상담 상세 내용 조회
-    @GetMapping("/client/detail/{reportId}")
-    public ResponseEntity<ReportDetailByClient> getReportDetailByClient(@PathVariable Long reportId, @AuthenticationPrincipal Member member) {
-        ReportDetailByClient reportDetailByClient = reportService.getReportDetailByClient(reportId);
-        return ResponseEntity.ok(reportDetailByClient);
-    }
-
     //날짜별 상담 목록 조회
     @GetMapping
     public ResponseEntity<PageResponse<ReportList>> getReportListsByDate(@RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate date,@PageableDefault(size=10, sort="createdAt") Pageable pageable,@AuthenticationPrincipal Member member) {

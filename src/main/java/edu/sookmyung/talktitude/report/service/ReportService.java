@@ -11,6 +11,8 @@ import edu.sookmyung.talktitude.chat.repository.ChatSessionRepository;
 import edu.sookmyung.talktitude.common.exception.BaseException;
 import edu.sookmyung.talktitude.common.exception.ErrorCode;
 import edu.sookmyung.talktitude.config.ai.GPTProperties;
+import edu.sookmyung.talktitude.memo.dto.MemoResponse;
+import edu.sookmyung.talktitude.memo.service.MemoService;
 import edu.sookmyung.talktitude.report.dto.*;
 import edu.sookmyung.talktitude.report.model.Category;
 import edu.sookmyung.talktitude.report.model.Report;
@@ -43,7 +45,7 @@ public class ReportService {
     private final ChatSessionRepository chatSessionRepository;
     private final GPTProperties gptProperties;
     private final ObjectMapper objectMapper;
-    //private final MemoService memoService;
+    private final MemoService memoService;
 
 
     @Transactional
@@ -162,11 +164,8 @@ public class ReportService {
     // 상담 상세 내용 조회
     public ReportDetail getReportDetail(Long reportId) {
         Report report = reportRepository.findById(reportId).orElseThrow(() -> new BaseException(ErrorCode.REPORT_NOT_FOUND));
-
-        //List<ReportMemo> reportMemos = memoService.getMemos(report.getId());
-
-        //return ReportDetail.convertToReportDetail(report,reportMemos);
-        return ReportDetail.convertToReportDetail(report,Collections.emptyList());
+        List<MemoResponse> reportMemos = memoService.getMemos(report.getId());
+        return ReportDetail.convertToReportDetail(report,reportMemos);
     }
 
     //사용자 이름 검색을 통한 상담 목록 조회
@@ -175,20 +174,4 @@ public class ReportService {
                 .map(ReportList::convertToDto);
     }
 
-    // 고객별 상담 목록 조회 - 우측 패널용
-    public Page<ReportListByClient> getReportsByClient(Long sessionId,Pageable pageable) {
-        ChatSession chatSession = chatSessionRepository.findById(sessionId).orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
-        return reportRepository.findByClientLoginId(chatSession.getClient().getLoginId(),pageable)
-                .map(ReportListByClient::convertToReportListByClient);
-
-    }
-
-    // 고객별 상담 상세 조회 - 우측 패널용
-    public ReportDetailByClient getReportDetailByClient(Long reportId) {
-
-        return reportRepository.findById(reportId)
-                .map(ReportDetailByClient::convertToReportDetailByClient)
-                .orElseThrow(()-> new BaseException(ErrorCode.REPORT_NOT_FOUND));
-
-    }
 }

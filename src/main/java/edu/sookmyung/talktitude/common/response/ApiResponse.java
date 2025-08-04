@@ -18,11 +18,11 @@ public class ApiResponse<T> {
 
 
     public static <T> ApiResponse<T> ok(T data){
-        return new ApiResponse<T>(true,data,null,null);
+        return new ApiResponse<T>(true,data,"200","요청이 성공했습니다.");
     }
 
     public static <T> ApiResponse<T> ok(T data, String message){
-        return new ApiResponse<T>(true,data,null,message);
+        return new ApiResponse<T>(true,data,"200",message);
     }
 
     public static <T> ApiResponse<T> error(ErrorCode errorCode, T data){

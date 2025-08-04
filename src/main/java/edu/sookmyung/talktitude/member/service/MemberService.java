@@ -10,6 +10,7 @@ import edu.sookmyung.talktitude.token.model.RefreshToken;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
 import edu.sookmyung.talktitude.token.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class MemberService {
 
     @Autowired
@@ -75,13 +77,14 @@ public class MemberService {
             return new LoginResponse(accessToken, refreshToken.getRefreshToken());
 
         } catch (BadCredentialsException e) {
+            log.error("아이디 또는 비밀번호가 올바르지 않습니다.:{}",e.getMessage());
             throw new BaseException(ErrorCode.WRONG_CREDENTIALS);
         } catch (UsernameNotFoundException e) {
-            //throw new BaseException(ErrorCode.AUTHENTICATION_FAILED);
-            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+            log.error("존재하지 않는 사용자 입니다:{}", e.getMessage());
+            throw new BaseException(ErrorCode.AUTHENTICATION_FAILED);
         } catch (Exception e) {
-            e.printStackTrace();  // 로그 확인용
-            throw new RuntimeException("로그인 처리 중 오류가 발생했습니다.");
+            log.error("로그인 처리 중 오류 발생:{}", e.getMessage());
+            throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
  }

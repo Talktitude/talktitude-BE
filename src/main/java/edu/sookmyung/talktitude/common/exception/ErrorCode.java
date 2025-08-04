@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
+
     //토큰 관련
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED,"INVALID_TOKEN","유효하지 않은 토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED,"TOKEN_EXPIRED","만료된 토큰입니다."),

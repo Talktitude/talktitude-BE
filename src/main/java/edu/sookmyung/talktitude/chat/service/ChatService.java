@@ -1,10 +1,12 @@
 package edu.sookmyung.talktitude.chat.service;
 
+import edu.sookmyung.talktitude.chat.dto.ChatMessageRequest;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
 import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
+import edu.sookmyung.talktitude.chat.model.SenderType;
 import edu.sookmyung.talktitude.chat.repository.ChatMessageRepository;
 import edu.sookmyung.talktitude.chat.repository.ChatSessionRepository;
 import edu.sookmyung.talktitude.chat.model.Status;
@@ -12,6 +14,8 @@ import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.client.model.Order;
 import edu.sookmyung.talktitude.client.repository.ClientRepository;
 import edu.sookmyung.talktitude.client.repository.OrderRepository;
+import edu.sookmyung.talktitude.common.exception.BaseException;
+import edu.sookmyung.talktitude.common.exception.ErrorCode;
 import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,12 +41,12 @@ public class ChatService {
     @Transactional
     public Long createChatSession(CreateSessionRequest request) {
         Client client = clientRepository.findById(request.getClientId())
-                .orElseThrow(() -> new IllegalArgumentException("고객을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BaseException(ErrorCode.CLIENT_NOT_FOUND));
 
         Order order = null;
-        if (request.getOrderID() != null) {
-            order = orderRepository.findById(request.getOrderID())
-                    .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+        if (request.getOrderId() != null) {
+            order = orderRepository.findById(request.getOrderId())
+                    .orElseThrow(() -> new BaseException(ErrorCode.ORDER_NOT_FOUND));
         }
 
         // TODO: 상담원 매칭 로직 → 지금은 임시로 첫 번째 상담원 지정
@@ -124,6 +128,10 @@ public class ChatService {
             throw new AccessDeniedException("해당 채팅 세션을 종료할 권한이 없습니다.");
         }
 
+        if (session.getStatus() == Status.FINISHED) {
+            throw new BaseException(ErrorCode.INVALID_SESSION_STATE); // ✅ 새로 추가
+        }
+
         session.finish(); // 종료로 상태 변경
     }
   
@@ -132,4 +140,33 @@ public class ChatService {
         List<ChatMessage> chatMessage = chatMessageRepository.findByChatSessionId(sessionId);
         return chatMessage;
     }
+
+    // WebSocket
+    @Transactional
+    public ChatMessage sendMessage(Long sessionId,
+                                   SenderType senderType,
+                                   String originalText,
+                                   String convertedText) {
+        // 1. 세션 확인
+        ChatSession session = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 채팅 세션이 존재하지 않습니다."));
+
+        // 2. 종료된 세션이면 차단
+        if (session.getStatus() == Status.FINISHED) {
+            throw new IllegalStateException("종료된 세션입니다.");
+        }
+
+        // 3. 메시지 저장
+        ChatMessage message = new ChatMessage(
+                null,
+                session,
+                senderType,
+                originalText,
+                convertedText,
+                LocalDateTime.now()
+        );
+        return chatMessageRepository.save(message);
+    }
+
+
 }

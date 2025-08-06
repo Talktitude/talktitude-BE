@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -101,11 +102,14 @@ public class ClientService {
             return new LoginResponse(accessToken, refreshToken.getRefreshToken());
 
         } catch (BadCredentialsException e) {
-            throw new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.");
+            log.error("아이디 또는 비밀번호가 올바르지 않습니다.:{}",e.getMessage());
+            throw new BaseException(ErrorCode.WRONG_CREDENTIALS);
         } catch (UsernameNotFoundException e) {
-            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+            log.error("존재하지 않는 사용자 입니다:{}", e.getMessage());
+            throw new  BaseException(ErrorCode.WRONG_CREDENTIALS);
         } catch (Exception e) {
-            throw new RuntimeException("로그인 처리 중 오류가 발생했습니다."+e);
+            log.error("로그인 처리 중 오류 발생:{}", e.getMessage());
+            throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -166,7 +170,7 @@ public class ClientService {
 
     // 오른쪽 정보 패널 -> 고객별 상담 목록 조회
     @Transactional(readOnly = true)
-    public Page<ReportListByClient> getReportsByClient(Long sessionId, Member member, Pageable pageable) {
+    public Page<ReportListByClient> getReportsByClient(Long sessionId, Member member, @PageableDefault(size=10,sort="time") Pageable pageable) {
         Client client = validateAndGetClient(sessionId, member);
         return reportRepository.findByClientLoginId(client.getLoginId(),pageable)
                 .map(ReportListByClient::convertToReportListByClient);
@@ -181,7 +185,7 @@ public class ClientService {
         Report report = reportRepository.findById(reportId).orElseThrow(() -> new BaseException(ErrorCode.REPORT_NOT_FOUND));
         //해당 리포트가 이 고객의 것인지 검증
         if(!report.getChatSession().getClient().getLoginId().equals(client.getLoginId())) {
-            throw new BaseException(ErrorCode.UNAUTHORIZED_CLIENT_ACCESS);
+            throw new BaseException(ErrorCode.REPORT_ACCESS_DENIED);
         }
         return ReportDetailByClient.convertToReportDetailByClient(report);
 

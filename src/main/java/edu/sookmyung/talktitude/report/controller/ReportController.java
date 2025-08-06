@@ -1,5 +1,6 @@
 package edu.sookmyung.talktitude.report.controller;
 
+import edu.sookmyung.talktitude.common.response.ApiResponse;
 import edu.sookmyung.talktitude.common.response.PageResponse;
 import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.report.dto.ReportDetail;
@@ -32,23 +33,23 @@ public class ReportController {
 
     //날짜별 상담 목록 조회
     @GetMapping
-    public ResponseEntity<PageResponse<ReportList>> getReportListsByDate(@RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate date,@PageableDefault(size=10, sort="createdAt") Pageable pageable,@AuthenticationPrincipal Member member) {
+    public ResponseEntity<ApiResponse<PageResponse<ReportList>>> getReportListsByDate(@RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate date,@PageableDefault(size=10, sort="createdAt") Pageable pageable,@AuthenticationPrincipal Member member) {
         Page<ReportList> reportLists = reportService.getReportListsByDate(date,pageable);
-        return ResponseEntity.ok(PageResponse.of(reportLists));
+        return ResponseEntity.ok(ApiResponse.ok(PageResponse.of(reportLists)));
     }
 
     //특정 리포트 상세 내용 조회
     @GetMapping("/detail/{reportId}")
-    public ResponseEntity<ReportDetail> getReportDetail(@PathVariable Long reportId,@AuthenticationPrincipal Member member) {
+    public ResponseEntity<ApiResponse<ReportDetail>> getReportDetail(@PathVariable Long reportId,@AuthenticationPrincipal Member member) {
         ReportDetail reportDetail = reportService.getReportDetail(reportId);
-        return ResponseEntity.ok(reportDetail);
+        return ResponseEntity.ok(ApiResponse.ok(reportDetail));
     }
 
     //고객 이름으로 리포트 검색
     @GetMapping("/search")
-    public ResponseEntity<PageResponse<ReportList>> searchReportLists(@RequestParam String clientName, @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date, @PageableDefault(size=10, sort="createdAt") Pageable pageable,@AuthenticationPrincipal Member member) {
+    public ResponseEntity<ApiResponse<PageResponse<ReportList>>> searchReportLists(@RequestParam String clientName, @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date, @PageableDefault(size=10, sort="createdAt") Pageable pageable,@AuthenticationPrincipal Member member) {
         Page<ReportList> reportLists = reportService.searchReportLists(clientName,date, pageable);
-        return ResponseEntity.ok(PageResponse.of(reportLists));
+        return ResponseEntity.ok(ApiResponse.ok(PageResponse.of(reportLists)));
     }
 
     // 서비스 메서드 직접 호출 (테스트용)

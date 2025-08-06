@@ -116,9 +116,9 @@ public class ReportBatchConfig {
             for (ReportDetail reportDetail : reportDetails) {
                 if (reportDetail != null) {
                     log.info("리포트 생성 완료 - ID: {}, 고객명: {}, 카테고리: {}",
-                            reportDetail.getId(),
-                            reportDetail.getClientName(),
-                            reportDetail.getCategory());
+                            reportDetail.id(),
+                            reportDetail.clientName(),
+                            reportDetail.category());
                 }
             }
             log.info("배치 처리 완료 - 총 {} 개 리포트 생성", reportDetails.size());

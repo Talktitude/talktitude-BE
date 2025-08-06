@@ -23,9 +23,11 @@ public enum ErrorCode {
 
     //Member 관련
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_001", "사용자 정보를 찾을 수 없습니다."),
+    DUPLICATE_LOGIN_ID(HttpStatus.CONFLICT, "MEMBER_002", "이미 존재하는 로그인 ID입니다."),
 
     //ChatSession 관련
     CHATSESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATSESSION_001", "세션 정보를 찾을 수 없습니다."),
+    INVALID_SESSION_STATE(HttpStatus.BAD_REQUEST, "CHATSESSION_002", "이미 종료된 상담 세션입니다."),
 
     // Order 관련
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_O001", "주문을 찾을 수 없습니다."),

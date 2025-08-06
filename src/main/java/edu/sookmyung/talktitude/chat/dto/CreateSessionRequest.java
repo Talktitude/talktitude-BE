@@ -7,5 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class CreateSessionRequest {
     private Long clientId;
-    private Long orderID; // null이면 '주문 외 문의'
+    private Long orderId; // null이면 '주문 외 문의'
 }

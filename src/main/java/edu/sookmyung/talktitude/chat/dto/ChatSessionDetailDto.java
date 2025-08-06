@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ChatSessionDetailDto {
     private Long sessionId;
-    private Long clientId;
+    private String clientLoginId;
     private String clientName;
     private String clientPhone;
     private LocalDateTime createdAt;
@@ -19,7 +19,7 @@ public class ChatSessionDetailDto {
 
     public ChatSessionDetailDto(ChatSession session, Client client) {
         this.sessionId = session.getId();
-        this.clientId = client.getId();
+        this.clientLoginId = client.getLoginId();
         this.clientName = client.getName();
         this.clientPhone = client.getPhone();
         this.createdAt = session.getCreatedAt();

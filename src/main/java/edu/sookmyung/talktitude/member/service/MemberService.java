@@ -35,8 +35,9 @@ public class MemberService {
 
     public void register(MemberDto dto) {
         // 중복 체크
-        if (memberRepository.findByLoginId(dto.getLoginId()).isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 로그인 ID입니다.");
+        boolean exists = memberRepository.findByLoginId(dto.getLoginId()).isPresent();
+        if (exists) {
+            throw new BaseException(ErrorCode.DUPLICATE_LOGIN_ID);
         }
 
         // 회원 생성
@@ -51,6 +52,10 @@ public class MemberService {
                 .build();
 
         memberRepository.save(member);
+    }
+
+    public boolean isDuplicateLoginId(String loginId) {
+        return memberRepository.findByLoginId(loginId).isPresent();
     }
 
     public Member findMemberById(Long id) {

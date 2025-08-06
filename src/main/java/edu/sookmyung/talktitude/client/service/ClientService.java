@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -169,7 +170,7 @@ public class ClientService {
 
     // 오른쪽 정보 패널 -> 고객별 상담 목록 조회
     @Transactional(readOnly = true)
-    public Page<ReportListByClient> getReportsByClient(Long sessionId, Member member, Pageable pageable) {
+    public Page<ReportListByClient> getReportsByClient(Long sessionId, Member member, @PageableDefault(size=10,sort="time") Pageable pageable) {
         Client client = validateAndGetClient(sessionId, member);
         return reportRepository.findByClientLoginId(client.getLoginId(),pageable)
                 .map(ReportListByClient::convertToReportListByClient);
@@ -184,7 +185,7 @@ public class ClientService {
         Report report = reportRepository.findById(reportId).orElseThrow(() -> new BaseException(ErrorCode.REPORT_NOT_FOUND));
         //해당 리포트가 이 고객의 것인지 검증
         if(!report.getChatSession().getClient().getLoginId().equals(client.getLoginId())) {
-            throw new BaseException(ErrorCode.UNAUTHORIZED_CLIENT_ACCESS);
+            throw new BaseException(ErrorCode.REPORT_ACCESS_DENIED);
         }
         return ReportDetailByClient.convertToReportDetailByClient(report);
 

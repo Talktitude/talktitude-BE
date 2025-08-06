@@ -47,7 +47,6 @@ public class ClientController {
     //오른쪽 정보 패널 -> 고객 정보 조회
     @GetMapping("/{sessionId}/client-info")
     public ResponseEntity<ApiResponse<ClientInfo>> getClientInfo(@AuthenticationPrincipal Member member, @PathVariable Long sessionId){
-
         ClientInfo clientInfo = clientService.getClientInfoById(sessionId, member);
         return ResponseEntity.ok(ApiResponse.ok(clientInfo));
     }
@@ -77,16 +76,16 @@ public class ClientController {
 
     //오른쪽 정보 패널 -> 고객별 상담 상세 내용 조회
     @GetMapping("{sessionId}/reports/detail/{reportId}")
-    public ResponseEntity<ReportDetailByClient> getReportDetailByClient(@PathVariable Long sessionId, @PathVariable Long reportId, @AuthenticationPrincipal Member member) {
+    public ResponseEntity<ApiResponse<ReportDetailByClient>> getReportDetailByClient(@PathVariable Long sessionId, @PathVariable Long reportId, @AuthenticationPrincipal Member member) {
         ReportDetailByClient reportDetailByClient = clientService.getReportDetailByClient(reportId,sessionId,member);
-        return ResponseEntity.ok(reportDetailByClient);
+        return ResponseEntity.ok(ApiResponse.ok(reportDetailByClient));
     }
 
     //오른쪽 정보 패널 -> 상담 중에 작성된 메모만 조회
-    @GetMapping("/{sessionId}/during-chats")
-    public ResponseEntity<List<MemoResponse>> getDuringChatUserMemos(@PathVariable Long sessionId, @AuthenticationPrincipal Member member) {
+    @GetMapping("/{sessionId}/during-session")
+    public ResponseEntity<ApiResponse<List<MemoResponse>>> getDuringChatUserMemos(@PathVariable Long sessionId, @AuthenticationPrincipal Member member) {
         List<MemoResponse> reportMemos = clientService.getDuringChatUserMemos(sessionId,member);
-        return ResponseEntity.ok().body(reportMemos);
+        return ResponseEntity.ok().body(ApiResponse.ok(reportMemos));
     }
 
 }

@@ -42,11 +42,11 @@ public enum ErrorCode {
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT_001", "리포트 정보를 찾을 수 없습니다."),
     REPORT_JSON_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "REPORT_002","리포트 생성 중 JSON 처리에 실패하였습니다"),
     GPT_API_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "REPORT_003", "GPT AI 서비스 호출에 실패했습니다."),
-    UNAUTHORIZED_CLIENT_ACCESS(HttpStatus.FORBIDDEN, "REPORT_004", "해당 고객의 상담 내용에 접근할 권한이 없습니다."),
+    REPORT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "REPORT_004", "해당 고객의 리포트 내용에 접근할 권한이 없습니다."),
 
     //Memo 관련
     MEMO_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMO_001", "메모 정보를 찾을 수 없습니다."),
-    MEMO_ACCESS_DENIED(HttpStatus.FORBIDDEN,"MEMO_002","메모 소유주가 아닙니다"),
+    MEMO_ACCESS_DENIED(HttpStatus.FORBIDDEN,"MEMO_002","메모 소유주가 아닙니다."),
 
     //Spring MVC 관련
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "INVALID_REQUEST","요청 형식이 잘못되었습니다."),

@@ -49,14 +49,14 @@ public class MemoService {
                     chatSession, currentMember, MemoPhase.DURING_CHAT).orElse(null);
 
             if(existingMemo != null) {
-                existingMemo.updateMemo(memo.getMemoText());
+                existingMemo.updateMemo(memo.memoText());
                 savedMemo = existingMemo;
             }else{
-                savedMemo = Memo.builder().member(currentMember).chatSession(chatSession).memoText(memo.getMemoText()).memoPhase(MemoPhase.DURING_CHAT).build();
+                savedMemo = Memo.builder().member(currentMember).chatSession(chatSession).memoText(memo.memoText()).memoPhase(MemoPhase.DURING_CHAT).build();
             }
         }else{
             //리포트에서 댓글 형식으로 작성된 메모인 경우 -> 모든 Member
-            savedMemo = Memo.builder().member(currentMember).chatSession(chatSession).memoText(memo.getMemoText()).memoPhase(MemoPhase.AFTER_CHAT).build();
+            savedMemo = Memo.builder().member(currentMember).chatSession(chatSession).memoText(memo.memoText()).memoPhase(MemoPhase.AFTER_CHAT).build();
         }
         memoRepository.save(savedMemo);
         return convertToMemoResponse(savedMemo);

@@ -11,8 +11,15 @@ import java.util.List;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
-    List<ChatMessage> findByChatSessionId(Long sessionId);
-    //특정 세션에서 가장 마지막에 작성된 메시지 1개를 시간 기준으로 조회
-    Optional<ChatMessage> findTopByChatSessionOrderByCreatedAtDesc(ChatSession chatSession);
+    // 세션의 최신 메시지 1건
+    Optional<ChatMessage> findTopByChatSessionOrderByCreatedAtDesc(ChatSession session);
+
+    // 세션의 모든 메시지 (시간순 정렬 권장)
+    List<ChatMessage> findByChatSessionIdOrderByCreatedAtAsc(Long sessionId);
+
+    // 사용 중이면 그대로
+    default List<ChatMessage> findByChatSessionId(Long sessionId) {
+        return findByChatSessionIdOrderByCreatedAtAsc(sessionId);
+    }
 
 }

@@ -114,4 +114,10 @@ public class TokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    // 웹소켓 관련 코드
+    public Long getMemberId(String token) {
+        Claims claims = getClaims(token);
+        return Long.valueOf(claims.get("id").toString());
+    }
 }

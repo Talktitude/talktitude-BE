@@ -17,22 +17,19 @@ public class HandShakeInterceptor implements HandshakeInterceptor {
     private final TokenProvider tokenProvider;
 
     @Override
-    public boolean beforeHandshake(ServerHttpRequest request,
-                                   ServerHttpResponse response,
-                                   WebSocketHandler wsHandler,
-                                   Map<String, Object> attributes) throws Exception {
+    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
+                                   WebSocketHandler wsHandler, Map<String, Object> attributes) {
 
-        var headers = request.getHeaders();
-        String auth = headers.getFirst("Authorization"); // "Bearer xxx"
+        String auth  = request.getHeaders().getFirst("Authorization");
         String token = (auth != null && auth.startsWith("Bearer ")) ? auth.substring(7) : null;
 
         if (token != null && tokenProvider.validToken(token)) {
-            Long memberId = tokenProvider.getMemberId(token);
-            attributes.put("memberId", memberId);
+            attributes.put("userId",   tokenProvider.getUserId(token));     // Long
+            attributes.put("userType", tokenProvider.getUserType(token));   // "Member"/"Client"
+            attributes.put("loginId",  tokenProvider.getLoginId(token));    // String (Principal용)
             return true;
         }
-
-        return false; // 유효하지 않으면 거절
+        return false;
     }
 
     @Override

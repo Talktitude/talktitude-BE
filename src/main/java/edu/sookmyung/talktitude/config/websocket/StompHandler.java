@@ -25,21 +25,24 @@ public class StompHandler implements ChannelInterceptor {
         if (acc == null) return message;
 
         Map<String, Object> attrs = acc.getSessionAttributes();
-        Long memberId = (attrs != null) ? (Long) attrs.get("memberId") : null;
+        Long userId = (attrs != null) ? (Long) attrs.get("userId") : null;
+        String userType = (attrs != null) ? (String) attrs.get("userType") : null;
 
         if (acc.getCommand() == StompCommand.CONNECT) {
-            if (memberId == null) throw new AccessDeniedException("Unauthorized");
+            if (userId == null) throw new AccessDeniedException("Unauthorized");
         }
 
         if (acc.getCommand() == StompCommand.SUBSCRIBE || acc.getCommand() == StompCommand.SEND) {
-            String dest = acc.getDestination(); // 예: /topic/session/123  또는 /app/chat/send
-            Long sessionId = extractSessionId(dest); // 직접 파싱 함수 작성
+            String dest = acc.getDestination(); // /topic/chat/{id} or /user/queue/chat/{id}
+            Long sessionId = extractSessionId(dest);
 
             if (sessionId != null) {
-                // 이 멤버가 해당 세션의 상담원/고객인지 확인
-                boolean allowed = chatSessionRepository.findById(sessionId)
-                        .map(s -> s.getMember().getId().equals(memberId) /* || 고객 매칭 로직 */)
-                        .orElse(false);
+                boolean allowed = chatSessionRepository.findById(sessionId).map(s -> {
+                    if ("Member".equalsIgnoreCase(userType)) return s.getMember().getId().equals(userId);
+                    if ("Client".equalsIgnoreCase(userType)) return s.getClient().getId().equals(userId);
+                    return false;
+                }).orElse(false);
+
                 if (!allowed) throw new AccessDeniedException("No permission for session " + sessionId);
             }
         }
@@ -48,10 +51,8 @@ public class StompHandler implements ChannelInterceptor {
 
     private Long extractSessionId(String dest) {
         if (dest == null) return null;
-        // /topic/session/{id} 또는 /app/chat/send payload 내부로도 가능
-        if (dest.startsWith("/topic/session/")) {
-            return Long.valueOf(dest.substring("/topic/session/".length()));
-        }
+        if (dest.startsWith("/topic/chat/")) return Long.valueOf(dest.substring("/topic/chat/".length()));
+        if (dest.startsWith("/user/queue/chat/")) return Long.valueOf(dest.substring("/user/queue/chat/".length()));
         return null;
     }
 }

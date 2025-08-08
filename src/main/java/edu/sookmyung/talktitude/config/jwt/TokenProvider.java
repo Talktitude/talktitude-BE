@@ -116,8 +116,11 @@ public class TokenProvider {
     }
 
     // 웹소켓 관련 코드
-    public Long getMemberId(String token) {
-        Claims claims = getClaims(token);
-        return Long.valueOf(claims.get("id").toString());
+    public String getLoginId(String token) {
+        return Jwts.parser()
+                .setSigningKey(jwtProperties.getSecretKey())
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject(); // subject = loginId
     }
 }

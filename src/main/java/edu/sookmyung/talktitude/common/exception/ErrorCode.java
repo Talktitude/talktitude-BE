@@ -33,6 +33,7 @@ public enum ErrorCode {
     //ChatSession 관련
     CHATSESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATSESSION_001", "세션 정보를 찾을 수 없습니다."),
     INVALID_SESSION_STATE(HttpStatus.BAD_REQUEST, "CHATSESSION_002", "이미 종료된 상담 세션입니다."),
+    CHATSESSION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CHATSESSION_003", "해당 세션에 접근할 권한이 없습니다."),
 
     // Order 관련
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_O01", "주문을 찾을 수 없습니다."),

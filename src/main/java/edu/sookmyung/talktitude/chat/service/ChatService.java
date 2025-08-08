@@ -168,5 +168,24 @@ public class ChatService {
         return chatMessageRepository.save(message);
     }
 
+    // 채팅 내역 조회
+    @Transactional(readOnly = true)
+    public List<ChatMessage> findChatMessagesWithAccessCheck(Long sessionId, Long userId, String userType) {
+        ChatSession session = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
+
+        boolean isAuthorized = false;
+        if ("Member".equalsIgnoreCase(userType)) {
+            isAuthorized = session.getMember().getId().equals(userId);
+        } else if ("Client".equalsIgnoreCase(userType)) {
+            isAuthorized = session.getClient().getId().equals(userId);
+        }
+
+        if (!isAuthorized) {
+            throw new BaseException(ErrorCode.CHATSESSION_ACCESS_DENIED);
+        }
+
+        return chatMessageRepository.findByChatSessionIdOrderByCreatedAtAsc(sessionId);
+    }
 
 }

@@ -1,10 +1,13 @@
 package edu.sookmyung.talktitude.chat.controller;
 
+import edu.sookmyung.talktitude.chat.dto.ChatMessageResponse;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
 import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
+import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.service.ChatService;
 import edu.sookmyung.talktitude.common.response.ApiResponse;
+import edu.sookmyung.talktitude.member.model.BaseUser;
 import edu.sookmyung.talktitude.member.model.Member;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,14 +26,14 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    // 상담 세션 생성
+    // 고객 - 상담 세션 생성
     @PostMapping("/sessions")
     public ResponseEntity<ApiResponse<Map<String, Long>>> createSession(@RequestBody CreateSessionRequest request) {
         Long sessionId = chatService.createChatSession(request);
         return ResponseEntity.ok(ApiResponse.ok(Map.of("sessionId", sessionId), "상담 세션이 생성되었습니다."));
     }
 
-    // 상담원 상담 목록 조회
+    // 상담원 - 상담 목록 조회
     @GetMapping("/sessions")
     public ResponseEntity<ApiResponse<List<ChatSessionDto>>> getSessions(
             @AuthenticationPrincipal Member member,
@@ -40,7 +43,7 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.ok(result, "상담 목록 조회 성공"));
     }
 
-    // 채팅 세션 정보 조회
+    // 상담원 - 채팅 세션 정보 조회
     @GetMapping("/sessions/{sessionId}")
     public ResponseEntity<ApiResponse<ChatSessionDetailDto>> getChatSessionDetail(
             @PathVariable Long sessionId,
@@ -50,7 +53,7 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.ok(session, "상담 세션 상세 조회 성공"));
     }
 
-    // 상담 종료
+    // 상담원 - 상담 종료
     @PatchMapping("/sessions/{sessionId}/finish")
     public ResponseEntity<ApiResponse<Void>> finishSession(
             @PathVariable Long sessionId,
@@ -59,5 +62,23 @@ public class ChatController {
         chatService.finishChatSession(sessionId, member.getId());
         return ResponseEntity.ok(ApiResponse.ok(null, "상담이 정상적으로 종료되었습니다."));
     }
+
+    // 상담원, 고객 - 채팅 내역 조회
+    @GetMapping("/sessions/{sessionId}/messages")
+    public ResponseEntity<ApiResponse<List<ChatMessageResponse>>> getMessages(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal BaseUser user
+    ) {
+
+        List<ChatMessage> messages =
+                chatService.findChatMessagesWithAccessCheck(sessionId, user.getId(), user.getUserType());
+
+        List<ChatMessageResponse> response = messages.stream()
+                .map(m -> new ChatMessageResponse(m, user.getUserType()))
+                .toList();
+
+        return ResponseEntity.ok(ApiResponse.ok(response, "채팅 메시지 조회 성공"));
+    }
+
 
 }

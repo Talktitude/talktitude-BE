@@ -15,20 +15,23 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final HandShakeInterceptor handShakeInterceptor;
     private final StompHandler stompHandler;
+    private final CustomHandshakeHandler customHandshakeHandler;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // WebSocket 연결 endpoint
         registry.addEndpoint("/ws")
                 .addInterceptors(handShakeInterceptor)
+                .setHandshakeHandler(customHandshakeHandler) // Principal 주입
                 .setAllowedOrigins("*")
                 .withSockJS();
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic"); // 구독 주소 (메시지를 구독(수신)하는 요청 엔드포인트)
+        registry.enableSimpleBroker("/topic", "/queue"); // 구독 주소 (메시지를 구독(수신)하는 요청 엔드포인트)
         registry.setApplicationDestinationPrefixes("/app"); // 발신 주소 (메시지를 발행(송신)하는 엔드포인트)
+        registry.setUserDestinationPrefix("/user");
     }
 
     @Override

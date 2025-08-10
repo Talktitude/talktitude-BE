@@ -80,5 +80,16 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.ok(response, "채팅 메시지 조회 성공"));
     }
 
+    // 상담원 - 상담 검색(고객 loginId + 상태 필터(ALL/IN_PROGRESS/FINISHED)
+    @GetMapping("/sessions/search")
+    public ResponseEntity<ApiResponse<List<ChatSessionDto>>> search(
+            @AuthenticationPrincipal Member member,
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "ALL") String status
+    ) {
+        List<ChatSessionDto> list =
+                chatService.searchByClientLoginId(member.getId(), keyword, status);
+        return ResponseEntity.ok(ApiResponse.ok(list, "채팅방 검색 성공"));
+    }
 
 }

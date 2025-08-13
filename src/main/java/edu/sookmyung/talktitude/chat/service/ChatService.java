@@ -1,6 +1,5 @@
 package edu.sookmyung.talktitude.chat.service;
 
-import edu.sookmyung.talktitude.chat.dto.ChatMessageRequest;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
 import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
@@ -100,6 +99,44 @@ public class ChatService {
                     );
                 })
                 .sorted(Comparator.comparing(ChatSessionDto::getLastMessageTime).reversed())  // 최신순 정렬
+                .toList();
+    }
+
+    // 상담 검색
+    @Transactional(readOnly = true)
+    public List<ChatSessionDto> searchByClientLoginId(Long memberId, String keyword, String statusStr) {
+        String kw = keyword.trim();
+        List<ChatSession> sessions;
+
+        if ("ALL".equalsIgnoreCase(statusStr)) {
+            sessions = chatSessionRepository
+                    .findByMember_IdAndClient_LoginIdContainingIgnoreCase(memberId, kw);
+        } else {
+            Status status;
+            try {
+                status = Status.valueOf(statusStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new BaseException(ErrorCode.CHATSESSION_INVALID_INPUT);
+            }
+            sessions = chatSessionRepository
+                    .findByMember_IdAndStatusAndClient_LoginIdContainingIgnoreCase(memberId, status, kw);
+        }
+
+        return sessions.stream()
+                .map(s -> {
+                    var last = chatMessageRepository
+                            .findTopByChatSessionOrderByCreatedAtDesc(s)
+                            .map(ChatMessage::getCreatedAt)
+                            .orElse(s.getCreatedAt());
+                    return new ChatSessionDto(
+                            s.getId(),
+                            s.getClient().getLoginId(),
+                            s.getClient().getPhone(),
+                            s.getClient().getProfileImageUrl(),
+                            last
+                    );
+                })
+                .sorted(Comparator.comparing(ChatSessionDto::getLastMessageTime).reversed())
                 .toList();
     }
 

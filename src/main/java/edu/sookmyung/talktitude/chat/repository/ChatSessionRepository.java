@@ -28,6 +28,14 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> 
             @Param("memberId") Long memberId,
             @Param("status") Status status
     );
+
+    // 상담 검색(상태 무관)
+    List<ChatSession> findByMember_IdAndClient_LoginIdContainingIgnoreCase(
+            Long memberId, String keyword);
+
+    // 상담 검색(상태 필터)
+    List<ChatSession> findByMember_IdAndStatusAndClient_LoginIdContainingIgnoreCase(
+            Long memberId, Status status, String keyword);
            
   
     @Query("""
@@ -45,5 +53,7 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> 
             @Param("endDate") LocalDateTime endDate,
             @Param("status") Status status  // ← 이렇게 매핑
     );
+
+
 
 }

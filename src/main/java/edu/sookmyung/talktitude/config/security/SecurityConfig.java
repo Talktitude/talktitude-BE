@@ -7,17 +7,23 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Configuration
@@ -36,13 +42,29 @@ public class SecurityConfig {
     //특정 HTTP 요청에 대한 웹 기반 보안 구성
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(auth-> auth //인증, 인가 설정
-                        .requestMatchers("/members/**","/clients/**","/reports/run").permitAll() // 인증 없이 접근 가능
-                        .anyRequest().authenticated()) //나머지 모든 요청 -> 인증 필요
-                .build();
+        http
+                // CORS: 빈으로 주입한 설정 사용 (Customizer.withDefaults())
+                .cors(Customizer.withDefaults())
+
+                // CSRF: REST API 개발환경에서는 보통 비활성화
+                .csrf(csrf -> csrf.disable())
+
+                // 인증/인가
+                .authorizeHttpRequests(auth -> auth
+                        // CORS preflight(OPTIONS) 허용 — 문제 생기면 추가
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // 비인증 허용 API
+                        .requestMatchers("/members/**", "/clients/**", "/reports/run").permitAll()
+
+                        // 그 외는 인증 필요
+                        .anyRequest().authenticated()
+                )
+
+                // 토큰 필터
+                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
 
     }
     //인증 관리자 관련 설정
@@ -70,6 +92,25 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "http://127.0.0.1:3000"
+        ));
+        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization")); // 필요 시
+        config.setAllowCredentials(true); // 쿠키/인증헤더 사용할 경우
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
 }

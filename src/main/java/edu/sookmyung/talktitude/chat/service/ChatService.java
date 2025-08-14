@@ -7,12 +7,10 @@ import edu.sookmyung.talktitude.chat.model.SenderType;
 import edu.sookmyung.talktitude.chat.repository.ChatMessageRepository;
 import edu.sookmyung.talktitude.chat.repository.ChatSessionRepository;
 import edu.sookmyung.talktitude.chat.model.Status;
-import edu.sookmyung.talktitude.client.model.Client;
-import edu.sookmyung.talktitude.client.model.Order;
-import edu.sookmyung.talktitude.client.model.OrderMenu;
-import edu.sookmyung.talktitude.client.model.Restaurant;
+import edu.sookmyung.talktitude.client.model.*;
 import edu.sookmyung.talktitude.client.repository.ClientRepository;
 import edu.sookmyung.talktitude.client.repository.OrderMenuRepository;
+import edu.sookmyung.talktitude.client.repository.OrderPaymentRepository;
 import edu.sookmyung.talktitude.client.repository.OrderRepository;
 import edu.sookmyung.talktitude.common.exception.BaseException;
 import edu.sookmyung.talktitude.common.exception.ErrorCode;
@@ -37,6 +35,7 @@ public class ChatService {
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
     private final OrderMenuRepository orderMenuRepository;
+    private final OrderPaymentRepository orderPaymentRepository;
 
 
     // 채팅 세션 생성
@@ -271,7 +270,6 @@ public class ChatService {
         String storeName = null;
         String storeImageUrl = null;
         String orderSummary = "주문 외 문의";
-        int totalPrice = 0;
 
         if (cs.getOrder() != null) {
             Order order = cs.getOrder();
@@ -283,18 +281,25 @@ public class ChatService {
                 storeImageUrl = r.getImageUrl();
             }
 
-            // 주문 메뉴 목록 조회
+            // 주문 메뉴 한 줄 요약
             List<OrderMenu> menus = orderMenuRepository.findByOrderId(order.getId());
+            String summaryCore;
             if (menus != null && !menus.isEmpty()) {
-                // 총액
-                totalPrice = menus.stream()
-                        .mapToInt(m -> m.getPrice() * m.getQuantity())
-                        .sum();
-
-                // 요약: 첫 메뉴 + 나머지 개수
                 String first = menus.get(0).getMenu();
                 int others = Math.max(0, menus.size() - 1);
-                orderSummary = (others > 0) ? first + " 외 " + others + "개" : first;
+                summaryCore = (others > 0) ? first + " 외 " + others + "개" : first;
+            } else {
+                summaryCore = "주문 외 문의";
+            }
+
+            // 결제 금액
+            Integer paidAmount = orderPaymentRepository.findPaidAmountByOrderId(order.getId()).orElse(null);
+
+            if (paidAmount != null) { // 결제 정보가 있을 때
+                String won = String.format("%,d원", paidAmount);
+                orderSummary = summaryCore + " " + won; // 0원이든 아니든 금액 붙임
+            } else {
+                orderSummary = summaryCore; // 결제 정보 자체가 없을 때
             }
         }
 
@@ -304,7 +309,6 @@ public class ChatService {
                 storeName,
                 storeImageUrl,
                 orderSummary,
-                totalPrice,
                 lastMessage
         );
     }

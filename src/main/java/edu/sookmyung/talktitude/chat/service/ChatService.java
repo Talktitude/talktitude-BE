@@ -243,7 +243,7 @@ public class ChatService {
                 .map(order -> {
                     List<OrderMenu> orderMenus = order.getOrderMenus();
                     OrderPayment payment = order.getOrderPayment();
-                    int menuCount = orderMenus.size();
+                    int menuCount = orderMenus.size()-1; //대표 메뉴를 제외한 메뉴 종류의 개수
 
                     //안전성 체크
                     if (orderMenus.isEmpty()) {

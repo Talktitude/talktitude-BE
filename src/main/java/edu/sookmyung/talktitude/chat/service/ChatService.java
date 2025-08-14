@@ -3,6 +3,7 @@ package edu.sookmyung.talktitude.chat.service;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
 import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
 import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
+import edu.sookmyung.talktitude.chat.dto.OrderHistory;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
 import edu.sookmyung.talktitude.chat.model.SenderType;
@@ -11,7 +12,11 @@ import edu.sookmyung.talktitude.chat.repository.ChatSessionRepository;
 import edu.sookmyung.talktitude.chat.model.Status;
 import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.client.model.Order;
+import edu.sookmyung.talktitude.client.model.OrderMenu;
+import edu.sookmyung.talktitude.client.model.OrderPayment;
 import edu.sookmyung.talktitude.client.repository.ClientRepository;
+import edu.sookmyung.talktitude.client.repository.OrderMenuRepository;
+import edu.sookmyung.talktitude.client.repository.OrderPaymentRepository;
 import edu.sookmyung.talktitude.client.repository.OrderRepository;
 import edu.sookmyung.talktitude.common.exception.BaseException;
 import edu.sookmyung.talktitude.common.exception.ErrorCode;
@@ -22,9 +27,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +42,8 @@ public class ChatService {
     private final ClientRepository clientRepository;
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
+    private final OrderMenuRepository orderMenuRepository;
+    private final OrderPaymentRepository orderPaymentRepository;
 
     // 채팅 세션 생성
     @Transactional
@@ -225,4 +234,35 @@ public class ChatService {
         return chatMessageRepository.findByChatSessionIdOrderByCreatedAtAsc(sessionId);
     }
 
+    //전체 주문 목록 조회
+    @Transactional(readOnly = true)
+    public List<OrderHistory> getOrderHistory(Client client) {
+        List<Order> orderList = orderRepository.findByClientLoginId(client.getLoginId());
+        return orderList.stream()
+                .sorted(Comparator.comparing(Order::getCreatedAt).reversed())
+                .map(order -> {
+                    List<OrderMenu> orderMenus = order.getOrderMenus();
+                    OrderPayment payment = order.getOrderPayment();
+                    int menuCount = orderMenus.size();
+
+                    //안전성 체크
+                    if (orderMenus.isEmpty()) {
+                        throw new BaseException(ErrorCode.ORDER_MENU_NOT_FOUND);
+                    }
+                    if (payment == null) {
+                        throw new BaseException(ErrorCode.ORDER_PAYMENT_NOT_FOUND);
+                    }
+
+                    return new OrderHistory(
+                        order.getId(),
+                        order.getRestaurant().getImageUrl(),
+                        order.getRestaurant().getName(),
+                        orderMenus.getFirst().getMenu(),
+                            menuCount,
+                            payment.getPaidAmount(),
+                            order.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 a h:mm"))
+                );
+                })
+                .collect(Collectors.toList());
+    }
 }

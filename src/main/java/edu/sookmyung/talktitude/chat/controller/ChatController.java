@@ -1,11 +1,9 @@
 package edu.sookmyung.talktitude.chat.controller;
 
-import edu.sookmyung.talktitude.chat.dto.ChatMessageResponse;
-import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
-import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
-import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
+import edu.sookmyung.talktitude.chat.dto.*;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.service.ChatService;
+import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.common.response.ApiResponse;
 import edu.sookmyung.talktitude.member.model.BaseUser;
 import edu.sookmyung.talktitude.member.model.Member;
@@ -31,6 +29,13 @@ public class ChatController {
     public ResponseEntity<ApiResponse<Map<String, Long>>> createSession(@RequestBody CreateSessionRequest request) {
         Long sessionId = chatService.createChatSession(request);
         return ResponseEntity.ok(ApiResponse.ok(Map.of("sessionId", sessionId), "상담 세션이 생성되었습니다."));
+    }
+
+    //고객 - 상담 전 주문 목록 조회
+    @GetMapping("/orders")
+    public ResponseEntity<ApiResponse<List<OrderHistory>>> getOrderHistory(@AuthenticationPrincipal Client client){
+        List<OrderHistory> orderHistoryList = chatService.getOrderHistory(client);
+        return ResponseEntity.ok(ApiResponse.ok(orderHistoryList));
     }
 
     // 상담원 - 상담 목록 조회
@@ -91,5 +96,7 @@ public class ChatController {
                 chatService.searchByClientLoginId(member.getId(), keyword, status);
         return ResponseEntity.ok(ApiResponse.ok(list, "채팅방 검색 성공"));
     }
+
+
 
 }

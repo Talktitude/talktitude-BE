@@ -137,7 +137,11 @@ public class ClientService {
         // 배달 정보와 함께 orderInfo dto 구성
         return orders.stream()
                 .map(order->{
-                    OrderDelivery orderDelivery = orderDeliveryRepository.findByOrder(order).orElseThrow(() -> new BaseException(ErrorCode.ORDER_DELIVERY_NOT_FOUND));
+                    OrderDelivery orderDelivery = order.getOrderDelivery();
+
+                    if(orderDelivery==null){
+                        throw new BaseException(ErrorCode.ORDER_DELIVERY_NOT_FOUND);
+                    }
                     return OrderInfo.convertToOrderInfo(order, orderDelivery);
                 }).collect(Collectors.toList());
     }
@@ -158,12 +162,20 @@ public class ClientService {
             throw new BaseException(ErrorCode.ORDER_ACCESS_DENIED);
         }
 
-        OrderDelivery orderDelivery = orderDeliveryRepository.findByOrder(order)
-                .orElseThrow(() -> new BaseException(ErrorCode.ORDER_DELIVERY_NOT_FOUND));
+        OrderDelivery orderDelivery = order.getOrderDelivery();
+        if(orderDelivery==null){
+            throw new BaseException(ErrorCode.ORDER_DELIVERY_NOT_FOUND);
+        }
 
-        OrderPayment orderPayment = orderPaymentRepository.findByOrder(order)
-                .orElseThrow(() -> new BaseException(ErrorCode.ORDER_PAYMENT_NOT_FOUND));
-        List<OrderMenu> orderMenus = orderMenuRepository.findByOrder(order);
+        OrderPayment orderPayment = order.getOrderPayment();
+        if(orderPayment==null){
+            throw new BaseException(ErrorCode.ORDER_PAYMENT_NOT_FOUND);
+        }
+
+        List<OrderMenu> orderMenus = order.getOrderMenus();
+        if(orderMenus.isEmpty()){
+            throw new BaseException(ErrorCode.ORDER_MENU_NOT_FOUND);
+        }
 
         return OrderDetailInfo.convertToOrderDetailInfo(order, orderDelivery, orderPayment, orderMenus);
     }

@@ -9,4 +9,6 @@ import java.util.List;
 public interface OrderMenuRepository extends JpaRepository<OrderMenu, Long> {
 
     List<OrderMenu> findByOrder(Order order);
+
+    List<OrderMenu> findByOrderId(Long orderId);
 }

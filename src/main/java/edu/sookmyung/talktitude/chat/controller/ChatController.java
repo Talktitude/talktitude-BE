@@ -98,5 +98,14 @@ public class ChatController {
     }
 
 
+    @GetMapping("/client/sessions")
+    public ResponseEntity<ApiResponse<ClientChatSessionListResponse>> getClientSessionsOverview(
+            @AuthenticationPrincipal Client client
+    ) {
+        ClientChatSessionListResponse data =
+                chatService.getClientSessionLists(client.getId());
+        return ResponseEntity.ok(ApiResponse.ok(data, "상담 목록 조회 성공"));
+    }
+
 
 }

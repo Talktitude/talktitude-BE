@@ -1,19 +1,14 @@
 package edu.sookmyung.talktitude.chat.service;
 
-import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
-import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
-import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
-import edu.sookmyung.talktitude.chat.dto.OrderHistory;
+
+import edu.sookmyung.talktitude.chat.dto.*;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
 import edu.sookmyung.talktitude.chat.model.SenderType;
 import edu.sookmyung.talktitude.chat.repository.ChatMessageRepository;
 import edu.sookmyung.talktitude.chat.repository.ChatSessionRepository;
 import edu.sookmyung.talktitude.chat.model.Status;
-import edu.sookmyung.talktitude.client.model.Client;
-import edu.sookmyung.talktitude.client.model.Order;
-import edu.sookmyung.talktitude.client.model.OrderMenu;
-import edu.sookmyung.talktitude.client.model.OrderPayment;
+import edu.sookmyung.talktitude.client.model.*;
 import edu.sookmyung.talktitude.client.repository.ClientRepository;
 import edu.sookmyung.talktitude.client.repository.OrderMenuRepository;
 import edu.sookmyung.talktitude.client.repository.OrderPaymentRepository;
@@ -235,6 +230,7 @@ public class ChatService {
         return chatMessageRepository.findByChatSessionIdOrderByCreatedAtAsc(sessionId);
     }
 
+
     //전체 주문 목록 조회
     @Transactional(readOnly = true)
     public List<OrderHistory> getOrderHistory(Client client) {
@@ -272,4 +268,90 @@ public class ChatService {
                 })
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 고객용 상담 목록 조회
+     */
+
+    @Transactional(readOnly = true)
+    public ClientChatSessionListResponse getClientSessionLists(Long clientId) {
+
+        List<ChatSession> inProgEntities =
+                chatSessionRepository.findByClient_IdAndStatus(clientId, Status.IN_PROGRESS);
+        List<ChatSession> finishedEntities =
+                chatSessionRepository.findByClient_IdAndStatus(clientId, Status.FINISHED);
+
+        List<ClientChatSessionDto> inProgress = inProgEntities.stream()
+                .map(this::toClientItem)
+                .toList();
+
+        List<ClientChatSessionDto> finished = finishedEntities.stream()
+                .map(this::toClientItem)
+                .toList();
+
+        return new ClientChatSessionListResponse(
+                inProgress.size(),
+                finished.size(),
+                inProgress,
+                finished
+        );
+    }
+
+    // ChatSession → 고객 리스트 아이템 DTO
+    private ClientChatSessionDto toClientItem(ChatSession cs) {
+        // 1. 마지막 메시지(클라이언트 관점 textToShow)
+        String lastMessage = chatMessageRepository
+                .findTopByChatSessionOrderByCreatedAtDesc(cs)
+                .map(m -> (m.getSenderType() == SenderType.CLIENT)
+                        ? (m.getConvertedText() != null ? m.getConvertedText() : m.getOriginalText())
+                        : m.getOriginalText())
+                .orElse("대화가 시작되었습니다.");
+
+        // 2. 가게/주문 요약/총액
+        String storeName = null;
+        String storeImageUrl = null;
+        String orderSummary = "주문 외 문의";
+
+        if (cs.getOrder() != null) {
+            Order order = cs.getOrder();
+
+            // 가게 정보
+            Restaurant r = order.getRestaurant();
+            if (r != null) {
+                storeName = r.getName();
+                storeImageUrl = r.getImageUrl();
+            }
+
+            // 주문 메뉴 한 줄 요약
+            List<OrderMenu> menus = orderMenuRepository.findByOrderId(order.getId());
+            String summaryCore;
+            if (menus != null && !menus.isEmpty()) {
+                String first = menus.get(0).getMenu();
+                int others = Math.max(0, menus.size() - 1);
+                summaryCore = (others > 0) ? first + " 외 " + others + "개" : first;
+            } else {
+                summaryCore = "주문 외 문의";
+            }
+
+            // 결제 금액
+            Integer paidAmount = orderPaymentRepository.findPaidAmountByOrderId(order.getId()).orElse(null);
+
+            if (paidAmount != null) { // 결제 정보가 있을 때
+                String won = String.format("%,d원", paidAmount);
+                orderSummary = summaryCore + " " + won; // 0원이든 아니든 금액 붙임
+            } else {
+                orderSummary = summaryCore; // 결제 정보 자체가 없을 때
+            }
+        }
+
+        return new ClientChatSessionDto(
+                cs.getId(),
+                cs.getStatus().name(),
+                storeName,
+                storeImageUrl,
+                orderSummary,
+                lastMessage
+        );
+    }
+
 }

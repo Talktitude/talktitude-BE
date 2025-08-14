@@ -1,8 +1,6 @@
 package edu.sookmyung.talktitude.chat.service;
 
-import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
-import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
-import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
+import edu.sookmyung.talktitude.chat.dto.*;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
 import edu.sookmyung.talktitude.chat.model.SenderType;
@@ -11,7 +9,10 @@ import edu.sookmyung.talktitude.chat.repository.ChatSessionRepository;
 import edu.sookmyung.talktitude.chat.model.Status;
 import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.client.model.Order;
+import edu.sookmyung.talktitude.client.model.OrderMenu;
+import edu.sookmyung.talktitude.client.model.Restaurant;
 import edu.sookmyung.talktitude.client.repository.ClientRepository;
+import edu.sookmyung.talktitude.client.repository.OrderMenuRepository;
 import edu.sookmyung.talktitude.client.repository.OrderRepository;
 import edu.sookmyung.talktitude.common.exception.BaseException;
 import edu.sookmyung.talktitude.common.exception.ErrorCode;
@@ -35,6 +36,8 @@ public class ChatService {
     private final ClientRepository clientRepository;
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
+    private final OrderMenuRepository orderMenuRepository;
+
 
     // 채팅 세션 생성
     @Transactional
@@ -224,5 +227,87 @@ public class ChatService {
 
         return chatMessageRepository.findByChatSessionIdOrderByCreatedAtAsc(sessionId);
     }
+
+
+    /**
+     * 고객용 상담 목록 조회
+     */
+
+    @Transactional(readOnly = true)
+    public ClientChatSessionListResponse getClientSessionLists(Long clientId) {
+
+        List<ChatSession> inProgEntities =
+                chatSessionRepository.findByClient_IdAndStatus(clientId, Status.IN_PROGRESS);
+        List<ChatSession> finishedEntities =
+                chatSessionRepository.findByClient_IdAndStatus(clientId, Status.FINISHED);
+
+        List<ClientChatSessionDto> inProgress = inProgEntities.stream()
+                .map(this::toClientItem)
+                .toList();
+
+        List<ClientChatSessionDto> finished = finishedEntities.stream()
+                .map(this::toClientItem)
+                .toList();
+
+        return new ClientChatSessionListResponse(
+                inProgress.size(),
+                finished.size(),
+                inProgress,
+                finished
+        );
+    }
+
+    // ChatSession → 고객 리스트 아이템 DTO
+    private ClientChatSessionDto toClientItem(ChatSession cs) {
+        // 1. 마지막 메시지(클라이언트 관점 textToShow)
+        String lastMessage = chatMessageRepository
+                .findTopByChatSessionOrderByCreatedAtDesc(cs)
+                .map(m -> (m.getSenderType() == SenderType.CLIENT)
+                        ? (m.getConvertedText() != null ? m.getConvertedText() : m.getOriginalText())
+                        : m.getOriginalText())
+                .orElse("대화가 시작되었습니다.");
+
+        // 2. 가게/주문 요약/총액
+        String storeName = null;
+        String storeImageUrl = null;
+        String orderSummary = "주문 외 문의";
+        int totalPrice = 0;
+
+        if (cs.getOrder() != null) {
+            Order order = cs.getOrder();
+
+            // 가게 정보
+            Restaurant r = order.getRestaurant();
+            if (r != null) {
+                storeName = r.getName();
+                storeImageUrl = r.getImageUrl();
+            }
+
+            // 주문 메뉴 목록 조회
+            List<OrderMenu> menus = orderMenuRepository.findByOrderId(order.getId());
+            if (menus != null && !menus.isEmpty()) {
+                // 총액
+                totalPrice = menus.stream()
+                        .mapToInt(m -> m.getPrice() * m.getQuantity())
+                        .sum();
+
+                // 요약: 첫 메뉴 + 나머지 개수
+                String first = menus.get(0).getMenu();
+                int others = Math.max(0, menus.size() - 1);
+                orderSummary = (others > 0) ? first + " 외 " + others + "개" : first;
+            }
+        }
+
+        return new ClientChatSessionDto(
+                cs.getId(),
+                cs.getStatus().name(),
+                storeName,
+                storeImageUrl,
+                orderSummary,
+                totalPrice,
+                lastMessage
+        );
+    }
+
 
 }

@@ -1,5 +1,6 @@
 package edu.sookmyung.talktitude.client.model;
 
+import edu.sookmyung.talktitude.chat.dto.OrderHistory;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -35,4 +36,13 @@ public class Order {
 
     @OneToMany(mappedBy = "order")
     private List<ChatSession> chatSessions;
+
+    @OneToMany(mappedBy="order",fetch = FetchType.EAGER)
+    private List<OrderMenu> orderMenus;
+
+    @OneToOne(fetch = FetchType.EAGER)
+    private OrderPayment orderPayment;
+
+    @OneToOne(fetch = FetchType.EAGER)
+    private OrderDelivery orderDelivery;
 }

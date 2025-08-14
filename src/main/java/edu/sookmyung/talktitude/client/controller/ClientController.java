@@ -4,6 +4,7 @@ import edu.sookmyung.talktitude.client.dto.ClientDto;
 import edu.sookmyung.talktitude.client.dto.ClientInfo;
 import edu.sookmyung.talktitude.client.dto.OrderDetailInfo;
 import edu.sookmyung.talktitude.client.dto.OrderInfo;
+import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.client.service.ClientService;
 import edu.sookmyung.talktitude.common.response.ApiResponse;
 import edu.sookmyung.talktitude.common.response.PageResponse;
@@ -43,7 +44,6 @@ public class ClientController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    /* 해당 채팅에 참가한 회원만 조회 가능하도록 구현 , */
     //오른쪽 정보 패널 -> 고객 정보 조회
     @GetMapping("/{sessionId}/client-info")
     public ResponseEntity<ApiResponse<ClientInfo>> getClientInfo(@AuthenticationPrincipal Member member, @PathVariable Long sessionId){

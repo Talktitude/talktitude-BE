@@ -1,5 +1,6 @@
 package edu.sookmyung.talktitude.chat.service;
 
+
 import edu.sookmyung.talktitude.chat.dto.*;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
@@ -20,10 +21,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +40,6 @@ public class ChatService {
     private final OrderRepository orderRepository;
     private final OrderMenuRepository orderMenuRepository;
     private final OrderPaymentRepository orderPaymentRepository;
-
 
     // 채팅 세션 생성
     @Transactional
@@ -228,6 +231,44 @@ public class ChatService {
     }
 
 
+    //전체 주문 목록 조회
+    @Transactional(readOnly = true)
+    public List<OrderHistory> getOrderHistory(Client client) {
+        List<Order> orderList = orderRepository.findByClientLoginId(client.getLoginId());
+        return orderList.stream()
+                .sorted(Comparator.comparing(Order::getCreatedAt).reversed())
+                .map(order -> {
+                    List<OrderMenu> orderMenus = order.getOrderMenus();
+                    OrderPayment payment = order.getOrderPayment();
+                    //안전성 체크
+                    if (orderMenus.isEmpty()) {
+                        throw new BaseException(ErrorCode.ORDER_MENU_NOT_FOUND);
+                    }
+                    if (payment == null) {
+                        throw new BaseException(ErrorCode.ORDER_PAYMENT_NOT_FOUND);
+                    }
+
+                    String mainMenu = orderMenus.getFirst().getMenu();
+                    int othersCount = Math.max(0, orderMenus.size() - 1);
+
+                    int totalPrice =payment.getPaidAmount();
+                    NumberFormat formatter = NumberFormat.getInstance(); //3자리마다 쉼표 추가
+                    String formattedPrice = formatter.format(totalPrice);
+
+
+                    String orderSummary = (othersCount > 0)
+                            ? mainMenu + " 외 " + othersCount + "개 " + formattedPrice + "원"
+                            : mainMenu + " " + formattedPrice + "원";
+
+                    return new OrderHistory(
+                        order.getId(),
+                        order.getRestaurant().getImageUrl(),
+                        order.getRestaurant().getName(), orderSummary, order.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 a h:mm"))
+                );
+                })
+                .collect(Collectors.toList());
+    }
+
     /**
      * 고객용 상담 목록 조회
      */
@@ -312,6 +353,5 @@ public class ChatService {
                 lastMessage
         );
     }
-
 
 }

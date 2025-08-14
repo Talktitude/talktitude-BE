@@ -41,6 +41,8 @@ public enum ErrorCode {
     ORDER_DELIVERY_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_O02", "배달 정보를 찾을 수 없습니다."),
     ORDER_PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_O03", "결제 정보를 찾을 수 없습니다."),
     ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ORDER_O04", "해당 주문에 접근할 권한이 없습니다."),
+    ORDER_MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_O05", "메뉴 정보를 찾을 수 없습니다."),
+
 
     //Report 관련
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT_001", "리포트 정보를 찾을 수 없습니다."),

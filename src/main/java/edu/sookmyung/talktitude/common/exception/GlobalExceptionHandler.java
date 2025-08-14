@@ -40,14 +40,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ErrorCode.AUTHENTICATION_FAILED));
     }
 
-    //잘못된 경로 매핑
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<?> handleNoResourceFound(NoResourceFoundException e) {
-        log.error("잘못된 경로 매핑 : {} ",e.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(ErrorCode.RESOURCE_NOT_FOUND));
-    }
-
-    //잘못된 메소드 매핑
+    //잘못된 Http 메소드 매핑
     @ExceptionHandler(value={HttpRequestMethodNotSupportedException.class})
     public ResponseEntity<?> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e){
         log.error("지원하지 않는 HTTP 메서드입니다 : {} ",e.getMessage());

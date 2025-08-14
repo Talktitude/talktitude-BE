@@ -1,11 +1,9 @@
 package edu.sookmyung.talktitude.chat.controller;
 
-import edu.sookmyung.talktitude.chat.dto.ChatMessageResponse;
-import edu.sookmyung.talktitude.chat.dto.ChatSessionDetailDto;
-import edu.sookmyung.talktitude.chat.dto.ChatSessionDto;
-import edu.sookmyung.talktitude.chat.dto.CreateSessionRequest;
+import edu.sookmyung.talktitude.chat.dto.*;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.service.ChatService;
+import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.common.response.ApiResponse;
 import edu.sookmyung.talktitude.member.model.BaseUser;
 import edu.sookmyung.talktitude.member.model.Member;
@@ -90,6 +88,15 @@ public class ChatController {
         List<ChatSessionDto> list =
                 chatService.searchByClientLoginId(member.getId(), keyword, status);
         return ResponseEntity.ok(ApiResponse.ok(list, "채팅방 검색 성공"));
+    }
+
+    @GetMapping("/client/sessions")
+    public ResponseEntity<ApiResponse<ClientChatSessionListResponse>> getClientSessionsOverview(
+            @AuthenticationPrincipal Client client
+    ) {
+        ClientChatSessionListResponse data =
+                chatService.getClientSessionLists(client.getId());
+        return ResponseEntity.ok(ApiResponse.ok(data, "상담 목록 조회 성공"));
     }
 
 }

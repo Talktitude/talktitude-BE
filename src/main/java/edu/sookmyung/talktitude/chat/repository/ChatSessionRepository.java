@@ -55,5 +55,10 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> 
     );
 
 
+    // 고객 상담 목록 조회
+
+    List<ChatSession> findByClient_IdAndStatus(Long clientId, Status status);
+
+    List<ChatSession> findByClient_Id(Long clientId); // 필요 시 전체
 
 }

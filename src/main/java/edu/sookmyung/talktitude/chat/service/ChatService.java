@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -243,8 +244,6 @@ public class ChatService {
                 .map(order -> {
                     List<OrderMenu> orderMenus = order.getOrderMenus();
                     OrderPayment payment = order.getOrderPayment();
-                    int menuCount = orderMenus.size()-1; //대표 메뉴를 제외한 메뉴 종류의 개수
-
                     //안전성 체크
                     if (orderMenus.isEmpty()) {
                         throw new BaseException(ErrorCode.ORDER_MENU_NOT_FOUND);
@@ -253,14 +252,22 @@ public class ChatService {
                         throw new BaseException(ErrorCode.ORDER_PAYMENT_NOT_FOUND);
                     }
 
+                    String mainMenu = orderMenus.getFirst().getMenu();
+                    int othersCount = Math.max(0, orderMenus.size() - 1);
+
+                    int totalPrice =payment.getPaidAmount();
+                    NumberFormat formatter = NumberFormat.getInstance(); //3자리마다 쉼표 추가
+                    String formattedPrice = formatter.format(totalPrice);
+
+
+                    String orderSummary = (othersCount > 0)
+                            ? mainMenu + " 외 " + othersCount + "개 " + formattedPrice + "원"
+                            : mainMenu + " " + formattedPrice + "원";
+
                     return new OrderHistory(
                         order.getId(),
                         order.getRestaurant().getImageUrl(),
-                        order.getRestaurant().getName(),
-                        orderMenus.getFirst().getMenu(),
-                            menuCount,
-                            payment.getPaidAmount(),
-                            order.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 a h:mm"))
+                        order.getRestaurant().getName(), orderSummary, order.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 a h:mm"))
                 );
                 })
                 .collect(Collectors.toList());

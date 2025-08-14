@@ -5,9 +5,7 @@ public record OrderHistory(
         Long orderId,
         String restaurantImageUrl,
         String restaurantName,
-        String mainMenu,
-        int menuCount,
-        int paidAmount,
+        String orderSummary,
         String orderDate
 ) {
 }

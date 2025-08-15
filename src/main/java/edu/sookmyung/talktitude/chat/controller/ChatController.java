@@ -26,8 +26,11 @@ public class ChatController {
 
     // 고객 - 상담 세션 생성
     @PostMapping("/sessions")
-    public ResponseEntity<ApiResponse<Map<String, Long>>> createSession(@RequestBody CreateSessionRequest request) {
-        Long sessionId = chatService.createChatSession(request);
+    public ResponseEntity<ApiResponse<Map<String, Long>>> createSession(
+            @AuthenticationPrincipal Client client,
+            @RequestBody(required = false) CreateSessionRequest request
+    ) {
+        Long sessionId = chatService.createChatSession(client, request);
         return ResponseEntity.ok(ApiResponse.ok(Map.of("sessionId", sessionId), "상담 세션이 생성되었습니다."));
     }
 

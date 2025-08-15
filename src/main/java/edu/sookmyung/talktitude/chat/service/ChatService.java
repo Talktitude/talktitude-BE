@@ -17,6 +17,7 @@ import edu.sookmyung.talktitude.common.exception.BaseException;
 import edu.sookmyung.talktitude.common.exception.ErrorCode;
 import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
+import org.springframework.lang.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
@@ -43,8 +44,8 @@ public class ChatService {
 
     // 채팅 세션 생성
     @Transactional
-    public Long createChatSession(CreateSessionRequest request) {
-        Client client = clientRepository.findById(request.getClientId())
+    public Long createChatSession(Client client, @Nullable CreateSessionRequest request) {
+        Client persisted = clientRepository.findById(client.getId())
                 .orElseThrow(() -> new BaseException(ErrorCode.CLIENT_NOT_FOUND));
 
         Order order = null;
@@ -59,7 +60,7 @@ public class ChatService {
         ChatSession session = new ChatSession(
                 null,
                 agent,
-                client,
+                persisted,
                 order,
                 LocalDateTime.now(),
                 Status.IN_PROGRESS // 기본값

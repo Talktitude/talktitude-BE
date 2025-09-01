@@ -30,7 +30,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: talktitude.jar
-          target: /home/ubuntu/talktitude/tobe  # ec2-user → ubuntu
+          target: /home/ubuntu/talktitude/tobe
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -51,7 +51,6 @@ jobs:
             # Spring Boot 애플리케이션 실행
             nohup java -jar talktitude.jar \
               --server.port=8080 \
-              --add-host=host.docker.internal:host-gateway \
               --spring.datasource.url=${{secrets.RDS_URL}} \
               --spring.datasource.username=${{secrets.RDS_USERNAME}} \
               --spring.datasource.password=${{secrets.RDS_PASSWORD}} \
@@ -64,5 +63,5 @@ jobs:
               --jwt.secret.key=${{ secrets.JWT_SECRET_KEY }} \
               > ./output.log 2>&1 &
 
-            # 정리
+            # 파일 정리
             rm -rf /home/ubuntu/talktitude/tobe

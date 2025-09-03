@@ -26,9 +26,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -56,9 +53,6 @@ public class ClientService {
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final OrderRepository orderRepository;
-    private final OrderDeliveryRepository orderDeliveryRepository;
-    private final OrderPaymentRepository orderPaymentRepository;
-    private final OrderMenuRepository orderMenuRepository;
     private final ChatSessionRepository chatSessionRepository;
     private final ReportRepository reportRepository;
     private final MemoRepository memoRepository;
@@ -182,10 +176,12 @@ public class ClientService {
 
     // 오른쪽 정보 패널 -> 고객별 상담 목록 조회
     @Transactional(readOnly = true)
-    public Page<ReportListByClient> getReportsByClient(Long sessionId, Member member, @PageableDefault(size=10,sort="time") Pageable pageable) {
+    public List<ReportListByClient> getReportsByClient(Long sessionId, Member member) {
         Client client = validateAndGetClient(sessionId, member);
-        return reportRepository.findByClientLoginId(client.getLoginId(),pageable)
-                .map(ReportListByClient::convertToReportListByClient);
+        return reportRepository.findByClientLoginId(client.getLoginId())
+                .stream()
+                .map(ReportListByClient::convertToReportListByClient)
+                .collect(Collectors.toList());
 
     }
 

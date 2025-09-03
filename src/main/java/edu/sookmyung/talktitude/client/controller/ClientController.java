@@ -4,10 +4,8 @@ import edu.sookmyung.talktitude.client.dto.ClientDto;
 import edu.sookmyung.talktitude.client.dto.ClientInfo;
 import edu.sookmyung.talktitude.client.dto.OrderDetailInfo;
 import edu.sookmyung.talktitude.client.dto.OrderInfo;
-import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.client.service.ClientService;
 import edu.sookmyung.talktitude.common.response.ApiResponse;
-import edu.sookmyung.talktitude.common.response.PageResponse;
 import edu.sookmyung.talktitude.member.dto.LoginRequest;
 import edu.sookmyung.talktitude.member.dto.LoginResponse;
 import edu.sookmyung.talktitude.member.model.Member;
@@ -15,10 +13,6 @@ import edu.sookmyung.talktitude.memo.dto.MemoResponse;
 import edu.sookmyung.talktitude.report.dto.ReportDetailByClient;
 import edu.sookmyung.talktitude.report.dto.ReportListByClient;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -69,9 +63,9 @@ public class ClientController {
 
     //오른쪽 정보 패널 -> 고객별 상담 목록 조회
     @GetMapping("/{sessionId}/reports")
-    public ResponseEntity<ApiResponse<PageResponse<ReportListByClient>>> getReportListByClient(@PathVariable Long sessionId, @PageableDefault(size=10, sort="createdAt",direction = Sort.Direction.ASC) Pageable pageable, @AuthenticationPrincipal Member member) {
-        Page<ReportListByClient> reportListByClients = clientService.getReportsByClient(sessionId,member,pageable);
-        return ResponseEntity.ok(ApiResponse.ok(PageResponse.of(reportListByClients)));
+    public ResponseEntity<ApiResponse<List<ReportListByClient>>> getReportListByClient(@PathVariable Long sessionId, @AuthenticationPrincipal Member member) {
+        List<ReportListByClient> reportListByClients = clientService.getReportsByClient(sessionId,member);
+        return ResponseEntity.ok(ApiResponse.ok(reportListByClients));
     }
 
     //오른쪽 정보 패널 -> 고객별 상담 상세 내용 조회

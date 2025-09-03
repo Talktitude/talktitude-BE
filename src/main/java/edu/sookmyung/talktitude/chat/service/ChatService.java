@@ -232,7 +232,7 @@ public class ChatService {
     }
 
 
-    //전체 주문 목록 조회
+    // 전체 주문 목록 조회
     @Transactional(readOnly = true)
     public List<OrderHistory> getOrderHistory(Client client) {
         List<Order> orderList = orderRepository.findByClientLoginId(client.getLoginId());
@@ -355,4 +355,33 @@ public class ChatService {
         );
     }
 
+    // 고객 - 채팅방 상단 헤더
+    @Transactional(readOnly = true)
+    public ClientChatRoomHeader getClientChatRoomHeader(Long sessionId, Long clientId) {
+        ChatSession session = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
+
+        // 권한 체크: 이 세션의 고객 본인만 접근 가능
+        if (!session.getClient().getId().equals(clientId)) {
+            throw new BaseException(ErrorCode.REPORT_ACCESS_DENIED);
+        }
+
+        // 기본 값: 주문 외 문의
+        Long orderId = null;
+        String title = "주문 외 문의";
+        boolean orderLinked = false;
+
+        if (session.getOrder() != null) {
+            orderLinked = true;
+            orderId = session.getOrder().getId();
+            title = session.getOrder().getRestaurant().getName();
+        }
+
+        return new ClientChatRoomHeader(
+                session.getId(),
+                orderId,
+                title,
+                orderLinked
+        );
+    }
 }

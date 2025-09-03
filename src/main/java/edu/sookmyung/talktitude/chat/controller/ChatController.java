@@ -1,8 +1,11 @@
 package edu.sookmyung.talktitude.chat.controller;
 
 import edu.sookmyung.talktitude.chat.dto.*;
+import edu.sookmyung.talktitude.chat.dto.recommend.CreateMessageRequest;
+import edu.sookmyung.talktitude.chat.dto.recommend.RecommendListDto;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.service.ChatService;
+import edu.sookmyung.talktitude.chat.service.RecommendService;
 import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.common.response.ApiResponse;
 import edu.sookmyung.talktitude.member.model.BaseUser;
@@ -19,9 +22,11 @@ import java.util.Map;
 public class ChatController {
 
     private final ChatService chatService;
+    private final RecommendService recommendService;
 
-    public ChatController(ChatService chatService) {
+    public ChatController(ChatService chatService, RecommendService recommendService) {
         this.chatService = chatService;
+        this.recommendService = recommendService;
     }
 
     // 고객 - 상담 세션 생성
@@ -110,5 +115,42 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.ok(data, "상담 목록 조회 성공"));
     }
 
+    // 상담원/고객 - 특정 메시지의 추천답변 조회(없으면 생성→반환)
+    @GetMapping("/sessions/{sessionId}/messages/{messageId}/recommendations")
+    public ResponseEntity<ApiResponse<RecommendListDto>> getOrGenerateRecommendations(
+            @PathVariable Long sessionId,
+            @PathVariable Long messageId,
+            @AuthenticationPrincipal BaseUser user
+    ) {
+        // 접근권한은 기존 getMessages와 동일하게 검사되어야 함(생략 시 service에서 검사 추가)
+        RecommendListDto data = recommendService.generate(messageId);
+        return ResponseEntity.ok(ApiResponse.ok(data, "추천 답변 생성/조회 성공"));
+    }
+
+
+
+    // 추천 답변 test용 엔드포인트
+    // 메시지를 저장하고, 그 메시지에 대한 추천답변을 즉시 생성/반환 (웹소켓 불필요)
+    @PostMapping("/sessions/{sessionId}/messages/test-recommendations")
+    public ResponseEntity<ApiResponse<RecommendListDto>> createMessageAndRecommend(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal BaseUser user,
+            @RequestBody CreateMessageRequest req
+    ) {
+        // 접근 권한 확인(결과는 사용 안 해도 됨)
+        chatService.findChatMessagesWithAccessCheck(sessionId, user.getId(), user.getUserType());
+
+        // 1) 메시지 저장(공손화는 다른 팀이 하므로 convertedText=null)
+        ChatMessage m = chatService.sendMessage(
+                sessionId,
+                req.getSenderType(),
+                req.getOriginalText(),
+                null
+        );
+
+        // 2) 추천답변 생성(동기) → 바로 반환
+        RecommendListDto data = recommendService.generate(m.getId());
+        return ResponseEntity.ok(ApiResponse.ok(data, "추천 답변 생성/조회 성공"));
+    }
 
 }

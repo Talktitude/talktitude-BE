@@ -8,7 +8,6 @@ import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
 import edu.sookmyung.talktitude.chat.model.Status;
 import edu.sookmyung.talktitude.chat.repository.ChatSessionRepository;
-import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.common.exception.BaseException;
 import edu.sookmyung.talktitude.common.exception.ErrorCode;
 import edu.sookmyung.talktitude.config.ai.GPTProperties;
@@ -156,10 +155,7 @@ public class ReportService {
 
         return reportRepository.findByCreatedAtBetween(startOfDay,endOfDay)
                 .stream()
-                .map(report->{
-                    Client client = report.getChatSession().getClient();
-                    return ReportList.convertToDto(report, client);
-                })
+                .map(ReportList::convertToDto)
                 .collect(Collectors.toList());
 
     }
@@ -175,10 +171,7 @@ public class ReportService {
     public List<ReportList> searchReportLists(String keyword, LocalDate targetDate) {
         return reportRepository.findByClientLoginIdOrNameLikeAndCreatedAt(keyword,targetDate)
                 .stream()
-                .map(report->{
-                    Client client = report.getChatSession().getClient();
-                    return ReportList.convertToDto(report, client);
-                })
+                .map(ReportList::convertToDto)
                 .collect(Collectors.toList());
     }
 

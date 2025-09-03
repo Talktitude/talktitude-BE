@@ -10,7 +10,6 @@ import edu.sookmyung.talktitude.member.dto.LoginRequest;
 import edu.sookmyung.talktitude.member.dto.LoginResponse;
 import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.memo.dto.MemoResponse;
-import edu.sookmyung.talktitude.report.dto.ReportDetailByClient;
 import edu.sookmyung.talktitude.report.dto.ReportListByClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -66,13 +65,6 @@ public class ClientController {
     public ResponseEntity<ApiResponse<List<ReportListByClient>>> getReportListByClient(@PathVariable Long sessionId, @AuthenticationPrincipal Member member) {
         List<ReportListByClient> reportListByClients = clientService.getReportsByClient(sessionId,member);
         return ResponseEntity.ok(ApiResponse.ok(reportListByClients));
-    }
-
-    //오른쪽 정보 패널 -> 고객별 상담 상세 내용 조회
-    @GetMapping("{sessionId}/reports/detail/{reportId}")
-    public ResponseEntity<ApiResponse<ReportDetailByClient>> getReportDetailByClient(@PathVariable Long sessionId, @PathVariable Long reportId, @AuthenticationPrincipal Member member) {
-        ReportDetailByClient reportDetailByClient = clientService.getReportDetailByClient(reportId,sessionId,member);
-        return ResponseEntity.ok(ApiResponse.ok(reportDetailByClient));
     }
 
     //오른쪽 정보 패널 -> 상담 중에 작성된 메모만 조회

@@ -1,6 +1,5 @@
 package edu.sookmyung.talktitude.report.dto;
 
-import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.report.model.Category;
 import edu.sookmyung.talktitude.report.model.Report;
 import java.time.LocalDate;
@@ -15,13 +14,13 @@ public record ReportList (
      LocalDate createdAt
 ){
 
-    public static ReportList convertToDto(Report report, Client client) {
+    public static ReportList convertToDto(Report report) {
         return new ReportList(
                 report.getId(),
                 report.getChatSession().getClient().getName(),
                 report.getChatSession().getClient().getPhone(),
                 report.getCategory(),
-                client.getProfileImageUrl(),
+                report.getChatSession().getClient().getProfileImageUrl(),
                 report.getCreatedAt().toLocalDate()
         );
     }

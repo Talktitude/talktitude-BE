@@ -51,7 +51,7 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> 
     List<ChatSession> findFinishedSessionsWithoutReports(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
-            @Param("status") Status status  // ← 이렇게 매핑
+            @Param("status") Status status
     );
 
 

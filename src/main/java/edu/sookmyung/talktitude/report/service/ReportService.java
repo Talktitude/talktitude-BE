@@ -8,6 +8,7 @@ import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
 import edu.sookmyung.talktitude.chat.model.Status;
 import edu.sookmyung.talktitude.chat.repository.ChatSessionRepository;
+import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.common.exception.BaseException;
 import edu.sookmyung.talktitude.common.exception.ErrorCode;
 import edu.sookmyung.talktitude.config.ai.GPTProperties;
@@ -22,8 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import edu.sookmyung.talktitude.chat.service.ChatService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -81,7 +80,6 @@ public class ReportService {
         );
 
         Report savedReport = reportRepository.save(report);
-
         return ReportDetail.convertToReportDetail(savedReport, Collections.emptyList());
     }
 
@@ -150,14 +148,19 @@ public class ReportService {
 
 
     // 날짜별 상담 목록 조회
-    public Page<ReportList> getReportListsByDate(LocalDate date, Pageable pageable) {
+    public List<ReportList> getReportListsByDate(LocalDate date) {
 
         //하루의 시작 시간과 끝 시간
         LocalDateTime startOfDay = date.atStartOfDay(); //해당 날짜의 00:00:00 시간 변환
         LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
 
-        return reportRepository.findByCreatedAtBetween(startOfDay,endOfDay,pageable)
-                .map(ReportList::convertToDto);
+        return reportRepository.findByCreatedAtBetween(startOfDay,endOfDay)
+                .stream()
+                .map(report->{
+                    Client client = report.getChatSession().getClient();
+                    return ReportList.convertToDto(report, client);
+                })
+                .collect(Collectors.toList());
 
     }
 
@@ -169,9 +172,14 @@ public class ReportService {
     }
 
     //사용자 이름 검색을 통한 상담 목록 조회
-    public Page<ReportList> searchReportLists(String clientName, LocalDate targetDate,Pageable pageable) {
-        return reportRepository.findByClientNameLikeAndCreatedAt(clientName,targetDate,pageable)
-                .map(ReportList::convertToDto);
+    public List<ReportList> searchReportLists(String keyword, LocalDate targetDate) {
+        return reportRepository.findByClientLoginIdOrNameLikeAndCreatedAt(keyword,targetDate)
+                .stream()
+                .map(report->{
+                    Client client = report.getChatSession().getClient();
+                    return ReportList.convertToDto(report, client);
+                })
+                .collect(Collectors.toList());
     }
 
 }

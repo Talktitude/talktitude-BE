@@ -1,6 +1,5 @@
 package edu.sookmyung.talktitude.member.service;
 
-import edu.sookmyung.talktitude.client.repository.ClientRepository;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

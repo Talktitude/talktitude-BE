@@ -6,7 +6,6 @@ import edu.sookmyung.talktitude.member.dto.LoginResponse;
 import edu.sookmyung.talktitude.member.dto.MemberDto;
 import edu.sookmyung.talktitude.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

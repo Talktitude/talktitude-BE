@@ -34,7 +34,7 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.ok(Map.of("sessionId", sessionId), "상담 세션이 생성되었습니다."));
     }
 
-    //고객 - 상담 전 주문 목록 조회
+    // 고객 - 상담 전 주문 목록 조회
     @GetMapping("/orders")
     public ResponseEntity<ApiResponse<List<OrderHistory>>> getOrderHistory(@AuthenticationPrincipal Client client){
         List<OrderHistory> orderHistoryList = chatService.getOrderHistory(client);
@@ -101,6 +101,7 @@ public class ChatController {
     }
 
 
+    // 상담원 - 상담 목록 조회
     @GetMapping("/client/sessions")
     public ResponseEntity<ApiResponse<ClientChatSessionListResponse>> getClientSessionsOverview(
             @AuthenticationPrincipal Client client
@@ -108,6 +109,16 @@ public class ChatController {
         ClientChatSessionListResponse data =
                 chatService.getClientSessionLists(client.getId());
         return ResponseEntity.ok(ApiResponse.ok(data, "상담 목록 조회 성공"));
+    }
+
+    // 고객 - 채팅방 상단 헤더
+    @GetMapping("/client/sessions/{sessionId}/header")
+    public ResponseEntity<ApiResponse<ClientChatRoomHeader>> getClientRoomHeader(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal Client client
+    ) {
+        ClientChatRoomHeader data = chatService.getClientChatRoomHeader(sessionId, client.getId());
+        return ResponseEntity.ok(ApiResponse.ok(data, "고객 채팅방 상단 헤더 조회 성공"));
     }
 
 

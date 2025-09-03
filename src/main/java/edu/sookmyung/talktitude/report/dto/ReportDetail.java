@@ -9,6 +9,7 @@ import java.util.List;
 
 public record ReportDetail (
      Long id,
+     Long sessionId,
      String clientName,
      String profileImageUrl,
      String memberName,
@@ -24,6 +25,7 @@ public record ReportDetail (
     public static ReportDetail convertToReportDetail(Report report, List<MemoResponse> memos) {
         return new ReportDetail(
                 report.getId(),
+                report.getChatSession().getId(),
                 report.getChatSession().getClient().getName(),
                 report.getChatSession().getClient().getProfileImageUrl(),
                 report.getChatSession().getMember().getName(),

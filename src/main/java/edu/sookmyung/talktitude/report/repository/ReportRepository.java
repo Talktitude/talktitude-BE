@@ -18,7 +18,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     @Query("SELECT r FROM Report r WHERE r.chatSession.client.loginId = :loginId")
     List<Report> findByClientLoginId(@Param("loginId") String loginId);
 
-    @Query("SELECT r FROM Report r WHERE (LOWER(r.chatSession.client.loginId) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.chatSession.client.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND DATE(r.createdAt) = :targetDate")
+    @Query("SELECT r FROM Report r WHERE LOWER(r.chatSession.client.loginId) LIKE LOWER(CONCAT('%', :keyword, '%')) AND DATE(r.createdAt) = :targetDate")
     List<Report> findByClientLoginIdOrNameLikeAndCreatedAt(
             @Param("keyword") String keyword,
             @Param("targetDate") LocalDate targetDate

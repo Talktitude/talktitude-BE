@@ -384,4 +384,10 @@ public class ChatService {
                 orderLinked
         );
     }
+
+    //최근 문장 조회
+    @Transactional(readOnly = true)
+    public List<ChatMessage> getRecentMessages(Long sessionId,int count){
+        return chatMessageRepository.findRecentByChatSessionId(sessionId,count);
+    }
 }

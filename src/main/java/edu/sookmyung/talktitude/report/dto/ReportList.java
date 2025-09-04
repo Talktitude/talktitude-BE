@@ -10,6 +10,7 @@ public record ReportList (
      String clientName,
      String phone,
      Category category,
+     String profileImageUrl,
      LocalDate createdAt
 ){
 
@@ -19,6 +20,7 @@ public record ReportList (
                 report.getChatSession().getClient().getName(),
                 report.getChatSession().getClient().getPhone(),
                 report.getCategory(),
+                report.getChatSession().getClient().getProfileImageUrl(),
                 report.getCreatedAt().toLocalDate()
         );
     }

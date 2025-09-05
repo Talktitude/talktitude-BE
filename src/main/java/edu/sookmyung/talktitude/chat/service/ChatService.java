@@ -20,7 +20,7 @@ import edu.sookmyung.talktitude.member.repository.MemberRepository;
 import org.springframework.lang.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
@@ -74,23 +74,20 @@ public class ChatService {
 
         // 트랜잭션 커밋 후 상담원에게 "새 세션 생성" 이벤트 푸시
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
-                @Override
-                public void afterCommit() {
+            ChatSession finalSession = session;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() {
                     var push = new SessionCreatedPush(
-                            session.getId(),
-                            session.getClient().getLoginId(),
-                            session.getClient().getPhone(),
-                            session.getClient().getProfileImageUrl(),
-                            session.getCreatedAt() // 생성 직후엔 마지막 메시지 대신 생성 시각
+                            finalSession.getId(),
+                            finalSession.getClient().getLoginId(),
+                            finalSession.getClient().getPhone(),
+                            finalSession.getClient().getProfileImageUrl(),
+                            finalSession.getStatus(),
+                            finalSession.getCreatedAt() // 생성 직후엔 마지막 메시지 대신 생성 시각
                     );
-                    String agentLoginId = session.getMember().getLoginId();
+                    String agentLoginId = finalSession.getMember().getLoginId();
                     // 상담원 전용 큐로 발송
-                    messagingTemplate.convertAndSendToUser(
-                            agentLoginId,
-                            "/queue/sessions/created",
-                            push
-                    );
+                    messagingTemplate.convertAndSendToUser(agentLoginId, "/queue/sessions/created", push);
                 }
             });
         }
@@ -127,7 +124,8 @@ public class ChatService {
                             session.getId(),
                             session.getClient().getLoginId(),
                             session.getClient().getPhone(),
-                            null, // profileImageUrl, 이후 구현 예정
+                            session.getClient().getProfileImageUrl(),
+                            session.getStatus(),
                             lastMessageTime
                     );
                 })
@@ -166,6 +164,7 @@ public class ChatService {
                             s.getClient().getLoginId(),
                             s.getClient().getPhone(),
                             s.getClient().getProfileImageUrl(),
+                            s.getStatus(),
                             last
                     );
                 })
@@ -199,32 +198,23 @@ public class ChatService {
         }
 
         if (session.getStatus() == Status.FINISHED) {
-            throw new BaseException(ErrorCode.INVALID_SESSION_STATE); // ✅ 새로 추가
+            throw new BaseException(ErrorCode.INVALID_SESSION_STATE);
         }
 
         session.finish(); // 종료로 상태 변경
 
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
-                @Override
-                public void afterCommit() {
-                    SessionStatusPush push = new SessionStatusPush(session.getId(), session.getStatus().name());
-
-                    String agentLoginId  = session.getMember().getLoginId();
-                    String clientLoginId = session.getClient().getLoginId();
+            ChatSession finalSession = session;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() {
+                    SessionStatusPush push = new SessionStatusPush(finalSession.getId(), finalSession.getStatus().name());
+                    String agentLoginId  = finalSession.getMember().getLoginId();
+                    String clientLoginId = finalSession.getClient().getLoginId();
 
                     // 같은 세션을 보고 있는 상담원에게 상태변경 알림
-                    messagingTemplate.convertAndSendToUser(
-                            agentLoginId,
-                            "/queue/chat/" + session.getId() + "/status",
-                            push
-                    );
+                    messagingTemplate.convertAndSendToUser(agentLoginId,  "/queue/chat/" + finalSession.getId() + "/status", push);
                     // 같은 세션을 보고 있는 고객에게도 상태변경 알림
-                    messagingTemplate.convertAndSendToUser(
-                            clientLoginId,
-                            "/queue/chat/" + session.getId() + "/status",
-                            push
-                    );
+                    messagingTemplate.convertAndSendToUser(clientLoginId, "/queue/chat/" + finalSession.getId() + "/status", push);
                 }
             });
         }

@@ -19,6 +19,9 @@ import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
 import org.springframework.lang.Nullable;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +44,7 @@ public class ChatService {
     private final OrderRepository orderRepository;
     private final OrderMenuRepository orderMenuRepository;
     private final OrderPaymentRepository orderPaymentRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // 채팅 세션 생성
     @Transactional
@@ -67,6 +71,29 @@ public class ChatService {
         );
 
         chatSessionRepository.save(session);
+
+        // 트랜잭션 커밋 후 상담원에게 "새 세션 생성" 이벤트 푸시
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+                @Override
+                public void afterCommit() {
+                    var push = new SessionCreatedPush(
+                            session.getId(),
+                            session.getClient().getLoginId(),
+                            session.getClient().getPhone(),
+                            session.getClient().getProfileImageUrl(),
+                            session.getCreatedAt() // 생성 직후엔 마지막 메시지 대신 생성 시각
+                    );
+                    String agentLoginId = session.getMember().getLoginId();
+                    // 상담원 전용 큐로 발송
+                    messagingTemplate.convertAndSendToUser(
+                            agentLoginId,
+                            "/queue/sessions/created",
+                            push
+                    );
+                }
+            });
+        }
         return session.getId();
     }
 
@@ -176,6 +203,31 @@ public class ChatService {
         }
 
         session.finish(); // 종료로 상태 변경
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+                @Override
+                public void afterCommit() {
+                    SessionStatusPush push = new SessionStatusPush(session.getId(), session.getStatus().name());
+
+                    String agentLoginId  = session.getMember().getLoginId();
+                    String clientLoginId = session.getClient().getLoginId();
+
+                    // 같은 세션을 보고 있는 상담원에게 상태변경 알림
+                    messagingTemplate.convertAndSendToUser(
+                            agentLoginId,
+                            "/queue/chat/" + session.getId() + "/status",
+                            push
+                    );
+                    // 같은 세션을 보고 있는 고객에게도 상태변경 알림
+                    messagingTemplate.convertAndSendToUser(
+                            clientLoginId,
+                            "/queue/chat/" + session.getId() + "/status",
+                            push
+                    );
+                }
+            });
+        }
     }
   
  

@@ -1,5 +1,6 @@
 package edu.sookmyung.talktitude.chat.dto;
 
+import edu.sookmyung.talktitude.chat.model.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,5 +13,6 @@ public class SessionCreatedPush {
     private String clientLoginId;
     private String clientPhone;
     private String profileImageUrl;
+    private Status status;
     private LocalDateTime lastMessageTime;
 }

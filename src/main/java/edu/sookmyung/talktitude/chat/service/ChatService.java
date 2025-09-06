@@ -19,6 +19,9 @@ import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
 import org.springframework.lang.Nullable;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +44,7 @@ public class ChatService {
     private final OrderRepository orderRepository;
     private final OrderMenuRepository orderMenuRepository;
     private final OrderPaymentRepository orderPaymentRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // 채팅 세션 생성
     @Transactional
@@ -67,6 +71,26 @@ public class ChatService {
         );
 
         chatSessionRepository.save(session);
+
+        // 트랜잭션 커밋 후 상담원에게 "새 세션 생성" 이벤트 푸시
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            ChatSession finalSession = session;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() {
+                    var push = new SessionCreatedPush(
+                            finalSession.getId(),
+                            finalSession.getClient().getLoginId(),
+                            finalSession.getClient().getPhone(),
+                            finalSession.getClient().getProfileImageUrl(),
+                            finalSession.getStatus(),
+                            finalSession.getCreatedAt() // 생성 직후엔 마지막 메시지 대신 생성 시각
+                    );
+                    String agentLoginId = finalSession.getMember().getLoginId();
+                    // 상담원 전용 큐로 발송
+                    messagingTemplate.convertAndSendToUser(agentLoginId, "/queue/sessions/created", push);
+                }
+            });
+        }
         return session.getId();
     }
 
@@ -100,7 +124,8 @@ public class ChatService {
                             session.getId(),
                             session.getClient().getLoginId(),
                             session.getClient().getPhone(),
-                            null, // profileImageUrl, 이후 구현 예정
+                            session.getClient().getProfileImageUrl(),
+                            session.getStatus(),
                             lastMessageTime
                     );
                 })
@@ -139,6 +164,7 @@ public class ChatService {
                             s.getClient().getLoginId(),
                             s.getClient().getPhone(),
                             s.getClient().getProfileImageUrl(),
+                            s.getStatus(),
                             last
                     );
                 })
@@ -172,10 +198,26 @@ public class ChatService {
         }
 
         if (session.getStatus() == Status.FINISHED) {
-            throw new BaseException(ErrorCode.INVALID_SESSION_STATE); // ✅ 새로 추가
+            throw new BaseException(ErrorCode.INVALID_SESSION_STATE);
         }
 
         session.finish(); // 종료로 상태 변경
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            ChatSession finalSession = session;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() {
+                    SessionStatusPush push = new SessionStatusPush(finalSession.getId(), finalSession.getStatus().name());
+                    String agentLoginId  = finalSession.getMember().getLoginId();
+                    String clientLoginId = finalSession.getClient().getLoginId();
+
+                    // 같은 세션을 보고 있는 상담원에게 상태변경 알림
+                    messagingTemplate.convertAndSendToUser(agentLoginId,  "/queue/chat/" + finalSession.getId() + "/status", push);
+                    // 같은 세션을 보고 있는 고객에게도 상태변경 알림
+                    messagingTemplate.convertAndSendToUser(clientLoginId, "/queue/chat/" + finalSession.getId() + "/status", push);
+                }
+            });
+        }
     }
   
  
@@ -381,7 +423,8 @@ public class ChatService {
                 session.getId(),
                 orderId,
                 title,
-                orderLinked
+                orderLinked,
+                session.getStatus()
         );
     }
 

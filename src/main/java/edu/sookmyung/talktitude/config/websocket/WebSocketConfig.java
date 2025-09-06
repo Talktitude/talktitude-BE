@@ -23,9 +23,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .addInterceptors(handShakeInterceptor)
                 .setHandshakeHandler(customHandshakeHandler) // Principal 주입
-                .setAllowedOrigins("*")
+                .setAllowedOriginPatterns(
+                        "http://localhost:3000",
+                        "http://127.0.0.1:3000",
+                        "http://localhost:3001",
+                        "http://127.0.0.1:3001"
+                )
                 .withSockJS();
     }
+
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -36,7 +42,23 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration
+                .taskExecutor()
+                .corePoolSize(8)
+                .maxPoolSize(32)
+                .queueCapacity(1000)
+                .keepAliveSeconds(60);
         registration.interceptors(stompHandler);
+    }
+
+    @Override
+    public void configureClientOutboundChannel(ChannelRegistration registration) {
+        registration
+                .taskExecutor()
+                .corePoolSize(8)
+                .maxPoolSize(32)
+                .queueCapacity(1000)
+                .keepAliveSeconds(60);
     }
 
 }

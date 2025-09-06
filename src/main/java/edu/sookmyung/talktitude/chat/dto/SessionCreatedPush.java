@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
-public class ChatSessionDto {
+public class SessionCreatedPush {
     private Long sessionId;
     private String clientLoginId;
     private String clientPhone;

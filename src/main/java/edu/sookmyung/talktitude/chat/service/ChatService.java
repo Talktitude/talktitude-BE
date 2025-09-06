@@ -423,7 +423,8 @@ public class ChatService {
                 session.getId(),
                 orderId,
                 title,
-                orderLinked
+                orderLinked,
+                session.getStatus()
         );
     }
 

@@ -23,6 +23,10 @@ public class PromptBuilder {
     @Value("${ai.openai.chat-model:gpt-4o-mini}")
     private String chatModel;
 
+    /**
+     * LLM 호출 페이로드 생성.
+     * - 응답은 반드시 JSON 배열([{text, policy_ids, risk}])로 강제
+     */
     public ObjectNode build(List<KnowledgeBase.Doc> docs,
                             String customerText,
                             String intent,
@@ -39,10 +43,12 @@ public class PromptBuilder {
                         "- 환불/보상은 '조건부/절차'로만 안내하고 확정 약속은 하지 않는다.\n" +
                         "- 2~3문장, 존댓말, 사과→다음 조치→재문의 유도.\n" +
                         "- 개인정보 요구 금지. 민감한 표현/비난 금지.\n" +
-                        "- 반드시 JSON 배열을 반환: [{\"text\":\"...\",\"policy_ids\":[\"...\"],\"risk\":\"low\"}]";
+                        "- 반드시 'JSON 배열'만 반환: " +
+                        "[{\"text\":\"...\",\"policy_ids\":[\"...\"],\"risk\":\"low|medium|high\"}]\n" +
+                        "- 설명, 서문, 코드블록 금지(배열만 반환).";
         msgs.add(obj("role", "system", "content", systemContent));
 
-        // ===== docs as JSON array string =====
+        // ===== docs as JSON array =====
         ArrayNode docArr = om.createArrayNode();
         for (KnowledgeBase.Doc d : docs) {
             ObjectNode o = om.createObjectNode();
@@ -66,24 +72,27 @@ public class PromptBuilder {
                         "- 각 답변은 2~3문장.\n" +
                         "- 환불/보상/쿠폰은 확정 약속 금지, 절차만.\n" +
                         "- 영업일 표기는 기본 " + bizDays + "일을 사용해도 된다.\n" +
-                        "- JSON 배열만 출력. 설명 금지.";
+                        "- 'JSON 배열'만 출력해라. 다른 텍스트 금지.";
         msgs.add(obj("role", "user", "content", userContent));
 
+        // ===== payload =====
         ObjectNode payload = om.createObjectNode();
-        payload.put("model", chatModel);                  // 프로퍼티에서 읽음
+        payload.put("model", chatModel);
         payload.set("messages", msgs);
         payload.put("temperature", 0.2);
-
-        // 일부 모델에서만 강제 JSON 지원. 호환 안 되면 주석 처리해도 됨.
-        ObjectNode rf = om.createObjectNode();
-        rf.put("type", "json_object");
-        payload.set("response_format", rf);
+        payload.put("max_tokens", 384); // 속도/비용 절충
 
         return payload;
     }
 
     private String safe(String s) {
         return s == null ? "" : s;
+    }
+
+    private ObjectNode obj(String k1, String v1) {
+        ObjectNode o = new ObjectNode(JsonNodeFactory.instance);
+        o.put(k1, v1);
+        return o;
     }
 
     private ObjectNode obj(String k1, String v1, String k2, String v2) {

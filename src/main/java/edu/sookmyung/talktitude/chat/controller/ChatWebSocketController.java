@@ -74,8 +74,10 @@ public class ChatWebSocketController {
         messagingTemplate.convertAndSendToUser(agentLoginId,  "/queue/chat/" + sessionId, forAgent);
         messagingTemplate.convertAndSendToUser(clientLoginId, "/queue/chat/" + sessionId, forClient);
 
-        // 메시지 저장 직후 추천답변 비동기 생성 & 푸시
-        recommendService.generateAndPush(message.getId());
+        // 고객 메시지일 때만 추천답변 생성
+        if (message.getSenderType() == SenderType.CLIENT) {
+            recommendService.generateAndPush(message.getId());
+        }
     }
 
     //공손 변환 로직

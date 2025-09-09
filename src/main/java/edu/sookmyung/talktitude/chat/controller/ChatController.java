@@ -136,12 +136,13 @@ public class ChatController {
     public ResponseEntity<ApiResponse<RecommendListDto>> createMessageAndRecommend(
             @PathVariable Long sessionId,
             @AuthenticationPrincipal BaseUser user,
+            @RequestParam(defaultValue = "false") boolean async,   // ← 추가
             @RequestBody CreateMessageRequest req
     ) {
-        // 접근 권한 확인(결과는 사용 안 해도 됨)
+        // 접근 권한 확인
         chatService.findChatMessagesWithAccessCheck(sessionId, user.getId(), user.getUserType());
 
-        // 1) 메시지 저장(공손화는 다른 팀이 하므로 convertedText=null)
+        // 메시지 저장
         ChatMessage m = chatService.sendMessage(
                 sessionId,
                 req.getSenderType(),
@@ -149,10 +150,20 @@ public class ChatController {
                 null
         );
 
-        // 2) 추천답변 생성(동기) → 바로 반환
-        RecommendListDto data = recommendService.generate(m.getId());
-        return ResponseEntity.ok(ApiResponse.ok(data, "추천 답변 생성/조회 성공"));
+        if (async) {
+            // 비동기 생성 → WebSocket으로 푸시
+            recommendService.generateAndPush(m.getId());
+            return ResponseEntity.ok(ApiResponse.ok(
+                    RecommendListDto.builder().messageId(m.getId()).items(List.of()).build(),
+                    "추천 생성 중(완료 시 WebSocket으로 푸시됨)")
+            );
+        } else {
+            // 동기 생성(POSTMAN 테스트용)
+            RecommendListDto data = recommendService.generate(m.getId());
+            return ResponseEntity.ok(ApiResponse.ok(data, "추천 답변 생성/조회 성공"));
+        }
     }
+
     // 고객 - 채팅방 상단 헤더
     @GetMapping("/client/sessions/{sessionId}/header")
     public ResponseEntity<ApiResponse<ClientChatRoomHeader>> getClientRoomHeader(

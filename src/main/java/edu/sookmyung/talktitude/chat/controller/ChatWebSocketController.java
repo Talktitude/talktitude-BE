@@ -7,6 +7,7 @@ import edu.sookmyung.talktitude.chat.dto.ChatMessageResponse;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.SenderType;
 import edu.sookmyung.talktitude.chat.service.ChatService;
+import edu.sookmyung.talktitude.chat.service.RecommendService;
 import edu.sookmyung.talktitude.config.ai.GPTProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ public class ChatWebSocketController {
 
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final RecommendService recommendService;
     private final ChatClient chatClient;
     private final GPTProperties gptProperties;
     private final ObjectMapper objectMapper;
@@ -71,6 +73,11 @@ public class ChatWebSocketController {
         // 👇 사용자 큐로 전송
         messagingTemplate.convertAndSendToUser(agentLoginId,  "/queue/chat/" + sessionId, forAgent);
         messagingTemplate.convertAndSendToUser(clientLoginId, "/queue/chat/" + sessionId, forClient);
+
+        // 고객 메시지일 때만 추천답변 생성
+        if (message.getSenderType() == SenderType.CLIENT) {
+            recommendService.generateAndPush(message.getId());
+        }
     }
 
     //공손 변환 로직

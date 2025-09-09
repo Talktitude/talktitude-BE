@@ -29,6 +29,7 @@ dependencies {
 
 	/* GPT API */
 	implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
 	/* Spring Batch */
 	implementation 'org.springframework.boot:spring-boot-starter-batch'

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.sookmyung.talktitude.chat.dto.ChatMessageRequest;
 import edu.sookmyung.talktitude.chat.dto.ChatMessageResponse;
+import edu.sookmyung.talktitude.chat.dto.SessionUpdatedPush;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.SenderType;
 import edu.sookmyung.talktitude.chat.service.ChatService;
@@ -34,11 +35,13 @@ public class ChatWebSocketController {
     @MessageMapping("chat/send")
     public void handleChatMessage(ChatMessageRequest request) {
 
+        // 1. 고객 메시지만 공손화 변환
         String convertedText = null;
         if (request.getSenderType() == SenderType.CLIENT) {
             convertedText = convertToPolite(request.getOriginalText(), request.getSessionId());
         }
 
+        // 2. 메시지 저장
         ChatMessage message = chatService.sendMessage(
                 request.getSessionId(),
                 request.getSenderType(),
@@ -50,6 +53,7 @@ public class ChatWebSocketController {
         String agentLoginId  = message.getChatSession().getMember().getLoginId();
         String clientLoginId = message.getChatSession().getClient().getLoginId();
 
+        // 3. 수신자별 표시 형태 구성
         // 상담원: 공손문(있으면) 표시, 원문보기 버튼 O
         ChatMessageResponse forAgent = new ChatMessageResponse(
                 message.getId(),
@@ -70,14 +74,32 @@ public class ChatWebSocketController {
                 message.getCreatedAt()
         );
 
-        // 👇 사용자 큐로 전송
+        // 4. 채팅 메시지 푸시(사용자 큐로 전송)
         messagingTemplate.convertAndSendToUser(agentLoginId,  "/queue/chat/" + sessionId, forAgent);
         messagingTemplate.convertAndSendToUser(clientLoginId, "/queue/chat/" + sessionId, forClient);
 
-        // 고객 메시지일 때만 추천답변 생성
+        // 5. 고객 메시지일 때만 추천답변 비동기 생성/푸시
         if (message.getSenderType() == SenderType.CLIENT) {
             recommendService.generateAndPush(message.getId());
         }
+
+        // 6. 상담 목록 업데이트 푸시 (목록 최상단 정렬용)
+        var cs = message.getChatSession();
+        var listPush = SessionUpdatedPush.builder()
+                .sessionId(cs.getId())
+                .clientLoginId(cs.getClient().getLoginId())
+                .clientPhone(cs.getClient().getPhone())
+                .profileImageUrl(cs.getClient().getProfileImageUrl())
+                .status(cs.getStatus().name())
+                .lastMessageTime(message.getCreatedAt())
+                .build();
+
+        // 상담원 상담 목록 업데이트 큐
+        messagingTemplate.convertAndSendToUser(
+                agentLoginId,
+                "/queue/sessions/updated",
+                listPush
+        );
     }
 
     //공손 변환 로직

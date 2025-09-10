@@ -174,5 +174,31 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.ok(data, "고객 채팅방 상단 헤더 조회 성공"));
     }
 
+    // 상담원 - 채팅방 입장 시 가장 최근 고객 메시지에 대한 추천 답변 생성
+    @GetMapping("/sessions/{sessionId}/recommendations/latest")
+    public ResponseEntity<ApiResponse<RecommendListDto>> latestForSession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal BaseUser user
+    ) {
+        // 권한 체크 (세션의 상담원인지)
+        chatService.getChatSessionDetail(sessionId, user.getId());
 
+        // 해당 세션의 메시지(오름차순) 조회 후, 가장 최근 CLIENT 메시지 찾기
+        var msgs = chatService.findChatMessagesWithAccessCheck(sessionId, user.getId(), user.getUserType());
+        var lastClient = msgs.stream()
+                .filter(m -> m.getSenderType() == edu.sookmyung.talktitude.chat.model.SenderType.CLIENT)
+                .reduce((a, b) -> b)  // 마지막 요소
+                .orElse(null);
+
+        if (lastClient == null) {
+            return ResponseEntity.ok(ApiResponse.ok(
+                    RecommendListDto.builder().messageId(null).items(List.of()).build(),
+                    "최근 고객 메시지가 없습니다."
+            ));
+        }
+
+        // 이미 생성된 게 있으면 재사용
+        RecommendListDto data = recommendService.generate(lastClient.getId());
+        return ResponseEntity.ok(ApiResponse.ok(data, "최근 고객 메시지에 대한 추천 반환"));
+    }
 }

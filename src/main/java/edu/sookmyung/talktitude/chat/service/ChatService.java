@@ -15,6 +15,7 @@ import edu.sookmyung.talktitude.client.repository.OrderPaymentRepository;
 import edu.sookmyung.talktitude.client.repository.OrderRepository;
 import edu.sookmyung.talktitude.common.exception.BaseException;
 import edu.sookmyung.talktitude.common.exception.ErrorCode;
+import edu.sookmyung.talktitude.common.util.DateTimeUtils;
 import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
 import org.springframework.lang.Nullable;
@@ -77,14 +78,17 @@ public class ChatService {
             ChatSession finalSession = session;
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override public void afterCommit() {
-                    var push = new SessionCreatedPush(
-                            finalSession.getId(),
-                            finalSession.getClient().getLoginId(),
-                            finalSession.getClient().getPhone(),
-                            finalSession.getClient().getProfileImageUrl(),
-                            finalSession.getStatus(),
-                            finalSession.getCreatedAt() // 생성 직후엔 마지막 메시지 대신 생성 시각
-                    );
+                    long createdAtMs = DateTimeUtils.toEpochMillis(finalSession.getCreatedAt()); // ✅ UTC epoch(ms)
+
+                    var push = SessionCreatedPush.builder()
+                            .sessionId(finalSession.getId())
+                            .clientLoginId(finalSession.getClient().getLoginId())
+                            .clientPhone(finalSession.getClient().getPhone())
+                            .profileImageUrl(finalSession.getClient().getProfileImageUrl())
+                            .status(finalSession.getStatus().name())
+                            .lastMessageTime(createdAtMs)
+                            .build();
+
                     String agentLoginId = finalSession.getMember().getLoginId();
                     // 상담원 전용 큐로 발송
                     messagingTemplate.convertAndSendToUser(agentLoginId, "/queue/sessions/created", push);
@@ -120,13 +124,15 @@ public class ChatService {
                             .map(ChatMessage::getCreatedAt)
                             .orElse(session.getCreatedAt());
 
+                    long lastMillis = DateTimeUtils.toEpochMillis(lastMessageTime); // LDT -> ms
+
                     return new ChatSessionDto(
                             session.getId(),
                             session.getClient().getLoginId(),
                             session.getClient().getPhone(),
                             session.getClient().getProfileImageUrl(),
                             session.getStatus(),
-                            lastMessageTime
+                            lastMillis
                     );
                 })
                 .sorted(Comparator.comparing(ChatSessionDto::getLastMessageTime).reversed())  // 최신순 정렬
@@ -159,16 +165,19 @@ public class ChatService {
                             .findTopByChatSessionOrderByCreatedAtDesc(s)
                             .map(ChatMessage::getCreatedAt)
                             .orElse(s.getCreatedAt());
+
+                    long lastMillis = DateTimeUtils.toEpochMillis(last); // LDT -> ms
+
                     return new ChatSessionDto(
                             s.getId(),
                             s.getClient().getLoginId(),
                             s.getClient().getPhone(),
                             s.getClient().getProfileImageUrl(),
                             s.getStatus(),
-                            last
+                            lastMillis
                     );
                 })
-                .sorted(Comparator.comparing(ChatSessionDto::getLastMessageTime).reversed())
+                .sorted(Comparator.comparingLong(ChatSessionDto::getLastMessageTime).reversed())
                 .toList();
     }
 

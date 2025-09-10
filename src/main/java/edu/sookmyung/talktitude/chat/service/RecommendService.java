@@ -10,6 +10,7 @@ import edu.sookmyung.talktitude.chat.dto.recommend.RecommendListDto;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
 import edu.sookmyung.talktitude.chat.model.Recommend;
+import edu.sookmyung.talktitude.chat.model.Status;
 import edu.sookmyung.talktitude.chat.recommend.llm.PromptBuilder;
 import edu.sookmyung.talktitude.chat.repository.ChatMessageRepository;
 import edu.sookmyung.talktitude.chat.repository.RecommendRepository;
@@ -52,6 +53,14 @@ public class RecommendService {
 
     @Transactional(readOnly = true)
     public RecommendListDto list(Long messageId) {
+        ChatMessage m = messageRepo.findById(messageId)
+                .orElseThrow(() -> new BaseException(ErrorCode.INVALID_REQUEST));
+
+        // 종료된 세션이면 기존에 저장된 추천이 있어도 보내지 않음
+        if (m.getChatSession().getStatus() == Status.FINISHED) {
+            return RecommendListDto.builder().messageId(null).items(List.of()).build();
+        }
+
         List<Recommend> rows = recommendRepo.findByMessage_IdOrderByPriorityAsc(messageId);
         List<RecommendItemDto> items = rows.stream()
                 .map(r -> RecommendItemDto.builder()
@@ -69,6 +78,12 @@ public class RecommendService {
     @Transactional
     public void generateAndPush(Long messageId) {
         RecommendListDto dto = generate(messageId);
+
+        // 종료 세션이거나 생성 결과가 비었으면 푸시하지 않음
+        if (dto.getItems() == null || dto.getItems().isEmpty()) {
+            return;
+        }
+
         // 세션 사용자 큐로 push
         ChatMessage m = messageRepo.findById(messageId)
                 .orElseThrow(() -> new BaseException(ErrorCode.INVALID_REQUEST));
@@ -85,6 +100,11 @@ public class RecommendService {
     public RecommendListDto generate(Long messageId) {
         ChatMessage m = messageRepo.findById(messageId)
                 .orElseThrow(() -> new BaseException(ErrorCode.INVALID_REQUEST));
+
+        // 종료된 세션인 경우 빈 값
+        if (m.getChatSession().getStatus() == Status.FINISHED) {
+            return RecommendListDto.builder().messageId(null).items(List.of()).build();
+        }
 
         // 이미 있으면 바로 반환(중복 생성 방지)
         List<Recommend> existing = recommendRepo.findByMessage_IdOrderByPriorityAsc(messageId);

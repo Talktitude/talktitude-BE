@@ -17,5 +17,5 @@ public class SessionUpdatedPush {
     private String clientPhone;
     private String profileImageUrl;
     private String status;
-    private LocalDateTime lastMessageTime;
+    private long lastMessageTime;
 }

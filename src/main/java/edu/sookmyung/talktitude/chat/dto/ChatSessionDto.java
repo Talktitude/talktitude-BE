@@ -14,5 +14,5 @@ public class ChatSessionDto {
     private String clientPhone;
     private String profileImageUrl;
     private Status status;
-    private LocalDateTime lastMessageTime;
+    private long lastMessageTime;
 }

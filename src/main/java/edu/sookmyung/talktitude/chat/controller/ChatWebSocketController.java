@@ -9,6 +9,7 @@ import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.SenderType;
 import edu.sookmyung.talktitude.chat.service.ChatService;
 import edu.sookmyung.talktitude.chat.service.RecommendService;
+import edu.sookmyung.talktitude.common.util.DateTimeUtils;
 import edu.sookmyung.talktitude.config.ai.GPTProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,7 @@ public class ChatWebSocketController {
         Long sessionId = request.getSessionId();
         String agentLoginId  = message.getChatSession().getMember().getLoginId();
         String clientLoginId = message.getChatSession().getClient().getLoginId();
+        long createdAtMs = DateTimeUtils.toEpochMillis(message.getCreatedAt());
 
         // 3. 수신자별 표시 형태 구성
         // 상담원: 공손문(있으면) 표시, 원문보기 버튼 O
@@ -61,7 +63,7 @@ public class ChatWebSocketController {
                 message.getOriginalText(),
                 (message.getConvertedText() != null),
                 message.getSenderType().name(),
-                message.getCreatedAt()
+                createdAtMs
         );
 
         // 고객: 항상 원문, 원문보기 버튼 X
@@ -71,7 +73,7 @@ public class ChatWebSocketController {
                 message.getOriginalText(),
                 false,
                 message.getSenderType().name(),
-                message.getCreatedAt()
+                createdAtMs
         );
 
         // 4. 채팅 메시지 푸시(사용자 큐로 전송)
@@ -91,7 +93,7 @@ public class ChatWebSocketController {
                 .clientPhone(cs.getClient().getPhone())
                 .profileImageUrl(cs.getClient().getProfileImageUrl())
                 .status(cs.getStatus().name())
-                .lastMessageTime(message.getCreatedAt())
+                .lastMessageTime(createdAtMs)
                 .build();
 
         // 상담원 상담 목록 업데이트 큐

@@ -2,6 +2,7 @@ package edu.sookmyung.talktitude.chat.dto;
 
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.SenderType;
+import edu.sookmyung.talktitude.common.util.DateTimeUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,13 +17,13 @@ public class ChatMessageResponse {
     private String originalText;  // 원문 텍스트(고객이 직접 입력한 것, 공손화된 경우에만 제공)
     private boolean showOriginal; // 원문보기 버튼 표시 여부
     private String senderType;
-    private LocalDateTime createdAt;
+    private long createdAt; // UTC epoch millis
 
     public ChatMessageResponse(ChatMessage message, String userType) {
         this.messageId = message.getId();
         this.originalText = message.getOriginalText();
         this.senderType = message.getSenderType().name();
-        this.createdAt = message.getCreatedAt();
+        this.createdAt = DateTimeUtils.toEpochMillis(message.getCreatedAt());
 
         if ("MEMBER".equalsIgnoreCase(userType)) {
             // 상담원 화면: 공손화가 있으면 공손문, 없으면 원문

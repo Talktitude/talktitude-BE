@@ -2,6 +2,7 @@ package edu.sookmyung.talktitude.chat.dto;
 
 import edu.sookmyung.talktitude.chat.model.ChatSession;
 import edu.sookmyung.talktitude.client.model.Client;
+import edu.sookmyung.talktitude.common.util.DateTimeUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -14,7 +15,7 @@ public class ChatSessionDetailDto {
     private String clientLoginId;
     private String clientName;
     private String clientPhone;
-    private LocalDateTime createdAt;
+    private long createdAt;
     private String status;
 
     public ChatSessionDetailDto(ChatSession session, Client client) {
@@ -22,7 +23,7 @@ public class ChatSessionDetailDto {
         this.clientLoginId = client.getLoginId();
         this.clientName = client.getName();
         this.clientPhone = client.getPhone();
-        this.createdAt = session.getCreatedAt();
+        this.createdAt = DateTimeUtils.toEpochMillis(session.getCreatedAt());
         this.status = session.getStatus().name();
     }
 }

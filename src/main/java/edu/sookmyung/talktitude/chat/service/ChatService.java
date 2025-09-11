@@ -67,7 +67,7 @@ public class ChatService {
                 agent,
                 persisted,
                 order,
-                LocalDateTime.now(),
+                DateTimeUtils.nowKst(),
                 Status.IN_PROGRESS // 기본값
         );
 
@@ -257,7 +257,7 @@ public class ChatService {
                 senderType,
                 originalText,
                 convertedText,
-                LocalDateTime.now()
+                DateTimeUtils.nowKst()
         );
         return chatMessageRepository.save(message);
     }

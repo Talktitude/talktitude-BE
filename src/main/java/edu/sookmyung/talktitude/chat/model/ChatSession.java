@@ -2,6 +2,7 @@ package edu.sookmyung.talktitude.chat.model;
 
 import edu.sookmyung.talktitude.client.model.Client;
 import edu.sookmyung.talktitude.client.model.Order;
+import edu.sookmyung.talktitude.common.util.DateTimeUtils;
 import edu.sookmyung.talktitude.member.model.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -35,10 +36,15 @@ public class ChatSession {
     private Order order; // 선택한 주문 (없을 수도 있음)
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) createdAt = DateTimeUtils.nowKst(); // KST 고정
+    }
 
     public void finish() {
         this.status = Status.FINISHED;

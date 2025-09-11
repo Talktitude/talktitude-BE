@@ -80,8 +80,18 @@ public class ChatWebSocketController {
         messagingTemplate.convertAndSendToUser(agentLoginId,  "/queue/chat/" + sessionId, forAgent);
         messagingTemplate.convertAndSendToUser(clientLoginId, "/queue/chat/" + sessionId, forClient);
 
-        // 5. 고객 메시지일 때만 추천답변 비동기 생성/푸시
+        // 5. 고객 메시지일 때만 추천 상태 STARTED 푸시 → 추천답변 비동기 생성/푸시 트리거
         if (message.getSenderType() == SenderType.CLIENT) {
+            var started = edu.sookmyung.talktitude.chat.dto.recommend.RecommendStatusPush.builder()
+                    .messageId(message.getId())
+                    .state("STARTED")
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            messagingTemplate.convertAndSendToUser(
+                    agentLoginId,  "/queue/chat/" + sessionId + "/recommendations/status", started
+            );
+
+            // 생성 완료/실패 시 DONE/ERROR는 RecommendService.generateAndPush 내부에서 푸시
             recommendService.generateAndPush(message.getId());
         }
 

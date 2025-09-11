@@ -77,22 +77,66 @@ public class RecommendService {
     @Async
     @Transactional
     public void generateAndPush(Long messageId) {
-        RecommendListDto dto = generate(messageId);
-
-        // 종료 세션이거나 생성 결과가 비었으면 푸시하지 않음
-        if (dto.getItems() == null || dto.getItems().isEmpty()) {
-            return;
-        }
-
-        // 세션 사용자 큐로 push
         ChatMessage m = messageRepo.findById(messageId)
                 .orElseThrow(() -> new BaseException(ErrorCode.INVALID_REQUEST));
         ChatSession s = m.getChatSession();
-        String agentLoginId  = s.getMember().getLoginId();
-        String clientLoginId = s.getClient().getLoginId();
-        String dest = "/queue/chat/" + s.getId() + "/recommendations";
-        messaging.convertAndSendToUser(agentLoginId, dest, dto);
-        // 정책상 고객에게는 미푸시
+
+        String agentLoginId = s.getMember().getLoginId();
+        String dataDest = "/queue/chat/" + s.getId() + "/recommendations";
+        String statusDest = "/queue/chat/" + s.getId() + "/recommendations/status";
+
+        try {
+            // 세션이 종료된 경우
+            if (s.getStatus() == Status.FINISHED) {
+                var done = edu.sookmyung.talktitude.chat.dto.recommend.RecommendStatusPush.builder()
+                        .messageId(messageId)
+                        .state("DONE")
+                        .reason("SESSION_FINISHED")
+                        .timestamp(System.currentTimeMillis())
+                        .build();
+                messaging.convertAndSendToUser(agentLoginId, statusDest, done);
+                return; // 추천 생성 안 하고 종료
+            }
+
+            // 추천 답변 생성 시도
+            RecommendListDto dto = generate(messageId);
+
+            // 종료 세션이거나 생성 결과가 비었으면 푸시하지 않음
+            if (dto.getItems() == null || dto.getItems().isEmpty()) {
+                var done= edu.sookmyung.talktitude.chat.dto.recommend.RecommendStatusPush.builder()
+                        .messageId(messageId)
+                        .state("DONE")
+                        .reason("NO_ITEMS")
+                        .timestamp(System.currentTimeMillis())
+                        .build();
+                messaging.convertAndSendToUser(agentLoginId, statusDest, done);
+                return; // 여기서 종료
+            }
+
+            // 여기까지 오면 정상적으로 추천이 생성됨
+            // 1) 데이터 푸시
+            messaging.convertAndSendToUser(agentLoginId, dataDest, dto);
+
+            // 2) 상태: DONE
+            var done = edu.sookmyung.talktitude.chat.dto.recommend.RecommendStatusPush.builder()
+                    .messageId(messageId)
+                    .state("DONE")
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            messaging.convertAndSendToUser(agentLoginId, statusDest, done);
+
+        } catch (Exception e) {
+            // 상태: ERROR
+            var err = edu.sookmyung.talktitude.chat.dto.recommend.RecommendStatusPush.builder()
+                    .messageId(messageId)
+                    .state("ERROR")
+                    .reason("GENERATION_FAILED")
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            messaging.convertAndSendToUser(agentLoginId, statusDest, err);
+            throw e; // 로깅/모니터링 위해 기존 흐름 유지
+        }
+
     }
 
     /** 동기 생성(REST로 즉시 요청 시) */

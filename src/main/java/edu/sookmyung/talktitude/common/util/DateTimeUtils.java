@@ -8,6 +8,10 @@ public class DateTimeUtils {
 
     private DateTimeUtils() {}
 
+    public static LocalDateTime nowKst() {
+        return LocalDateTime.now(KST); // 저장 시점 KST 고정
+    }
+
     // LocalDateTime -> Instant(UTC) -> epochMillis
     public static long toEpochMillis(LocalDateTime ldt) {
         if (ldt == null) return 0L;

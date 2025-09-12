@@ -18,6 +18,11 @@ public class ChatSessionDetailDto {
     private long createdAt;
     private String status;
 
+    private boolean orderRelated;
+    private Long orderId;
+    private String orderNumber;
+    private String storeName;
+
     public ChatSessionDetailDto(ChatSession session, Client client) {
         this.sessionId = session.getId();
         this.clientLoginId = client.getLoginId();

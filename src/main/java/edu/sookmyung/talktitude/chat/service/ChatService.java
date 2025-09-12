@@ -193,7 +193,33 @@ public class ChatService {
         }
 
         Client client = session.getClient();
-        return new ChatSessionDetailDto(session, client);
+
+        boolean orderRelated = false;
+        Long orderId = null;
+        String orderNumber = null;
+        String storeName = null;
+
+        if (session.getOrder() != null) {
+            Order order = session.getOrder();
+            orderRelated = true;
+            orderId = order.getId();
+            orderNumber = order.getOrderNumber();
+            storeName = order.getRestaurant().getName();
+        }
+
+        return new ChatSessionDetailDto(
+                session.getId(),
+                client.getLoginId(),
+                client.getName(),
+                client.getPhone(),
+                DateTimeUtils.toEpochMillis(session.getCreatedAt()),
+                session.getStatus().name(),
+                orderRelated,
+                orderId,
+                orderNumber,
+                storeName
+
+        );
     }
 
     // 상담 종료

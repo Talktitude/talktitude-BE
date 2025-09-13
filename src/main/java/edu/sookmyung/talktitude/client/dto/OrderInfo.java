@@ -11,15 +11,18 @@ public record OrderInfo(
         DeliveryStatus deliveryStatus,
         String restaurantImageUrl,
         String restaurantName,
-        String orderNumber
+        String orderNumber,
+        boolean isCurrentOrder
+
 ) {
-    public static OrderInfo convertToOrderInfo(Order order, OrderDelivery orderDelivery) {
+    public static OrderInfo convertToOrderInfo(Order order, OrderDelivery orderDelivery,boolean isCurrentOrder) {
         return new OrderInfo(
                 order.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 a h:mm")),
                 orderDelivery.getStatus(),
                 order.getRestaurant().getImageUrl(),
                 order.getRestaurant().getName(),
-                order.getOrderNumber()
+                order.getOrderNumber(),
+                isCurrentOrder
         );
     }
 }

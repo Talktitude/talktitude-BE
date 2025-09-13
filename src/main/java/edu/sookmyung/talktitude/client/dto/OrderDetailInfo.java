@@ -12,7 +12,7 @@ public record OrderDetailInfo(
         PaymentInfo paymentInfo,
         DeliveryInfo deliveryInfo
 ) {
-    public static OrderDetailInfo convertToOrderDetailInfo(Order order, OrderDelivery orderDelivery, OrderPayment orderPayment, List<OrderMenu> orderMenus) {
+    public static OrderDetailInfo convertToOrderDetailInfo(Order order, OrderDelivery orderDelivery, OrderPayment orderPayment, List<OrderMenu> orderMenus, boolean isCurrentOrder) {
         List<OrderMenuInfo> orderMenuInfos = orderMenus.stream().map(menu ->
                 new OrderMenuInfo(
                         menu.getMenu(),
@@ -28,7 +28,8 @@ public record OrderDetailInfo(
                         orderDelivery.getStatus(),
                         order.getRestaurant().getImageUrl(),
                         order.getRestaurant().getName(),
-                        order.getOrderNumber()
+                        order.getOrderNumber(),
+                        isCurrentOrder
                 ),
                 new OrderMenuSummary(
                         orderMenuInfos,

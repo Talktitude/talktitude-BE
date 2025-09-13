@@ -312,7 +312,7 @@ public class ChatService {
     // 전체 주문 목록 조회
     @Transactional(readOnly = true)
     public List<OrderHistory> getOrderHistory(Client client) {
-        List<Order> orderList = orderRepository.findByClientLoginId(client.getLoginId());
+        List<Order> orderList = orderRepository.findByClientLoginIdOrderByCreatedAtDesc(client.getLoginId()); //최신순으로 정렬
         return orderList.stream()
                 .sorted(Comparator.comparing(Order::getCreatedAt).reversed())
                 .map(order -> {

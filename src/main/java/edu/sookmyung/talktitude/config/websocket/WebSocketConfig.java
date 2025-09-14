@@ -24,8 +24,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .addInterceptors(handShakeInterceptor)
                 .setHandshakeHandler(customHandshakeHandler) // Principal 주입
                 .setAllowedOriginPatterns(
-                        "http://localhost:3000",
-                        "http://localhost:3001",
+                        "https://localhost:3000",
+                        "https://localhost:3001",
                         "https://talktitude-client-fe.vercel.app"
                 )
                 .withSockJS();

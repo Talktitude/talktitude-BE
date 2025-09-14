@@ -101,8 +101,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://localhost:3001",
+                "https://localhost:3000",
+                "https://localhost:3001",
                 "https://talktitude-client-fe.vercel.app"
         ));
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));

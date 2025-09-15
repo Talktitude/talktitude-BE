@@ -26,7 +26,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOriginPatterns(
                         "https://localhost:3000",
                         "https://localhost:3001",
-                        "https://talktitude-client-fe.vercel.app"
+                        "https://talktitude-client-fe.vercel.app",
+                        "https://talktitude-agent-fe.vercel.app "
                 )
                 .withSockJS();
     }

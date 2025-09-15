@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.sookmyung.talktitude.chat.dto.ChatMessageRequest;
 import edu.sookmyung.talktitude.chat.dto.ChatMessageResponse;
+import edu.sookmyung.talktitude.chat.dto.ClientSessionUpdatedPush;
 import edu.sookmyung.talktitude.chat.dto.SessionUpdatedPush;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.SenderType;
@@ -95,7 +96,7 @@ public class ChatWebSocketController {
             recommendService.generateAndPush(message.getId());
         }
 
-        // 6. 상담 목록 업데이트 푸시 (목록 최상단 정렬용)
+        // 6. 상담원 - 상담 목록 업데이트 푸시 (목록 최상단 정렬용)
         var cs = message.getChatSession();
         var listPush = SessionUpdatedPush.builder()
                 .sessionId(cs.getId())
@@ -111,6 +112,14 @@ public class ChatWebSocketController {
                 agentLoginId,
                 "/queue/sessions/updated",
                 listPush
+        );
+
+        // 고객 - 상담 목록 업데이트 푸시
+        ClientSessionUpdatedPush clientListPush = chatService.buildClientUpdatedPush(cs);
+        messagingTemplate.convertAndSendToUser(
+                clientLoginId,
+                "/queue/client/sessions/updated",
+                clientListPush
         );
     }
 

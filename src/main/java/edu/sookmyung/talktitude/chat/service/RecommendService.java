@@ -11,6 +11,7 @@ import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.ChatSession;
 import edu.sookmyung.talktitude.chat.model.Recommend;
 import edu.sookmyung.talktitude.chat.model.Status;
+import edu.sookmyung.talktitude.chat.recommend.kb.KnowledgeBase;
 import edu.sookmyung.talktitude.chat.recommend.llm.PromptBuilder;
 import edu.sookmyung.talktitude.chat.repository.ChatMessageRepository;
 import edu.sookmyung.talktitude.chat.repository.RecommendRepository;
@@ -20,6 +21,7 @@ import edu.sookmyung.talktitude.chat.recommend.kb.Retriever;
 import edu.sookmyung.talktitude.config.ai.GptClient;
 import edu.sookmyung.talktitude.common.exception.BaseException;
 import edu.sookmyung.talktitude.common.exception.ErrorCode;
+import edu.sookmyung.talktitude.rag.search.DocRetrievalFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,11 +41,12 @@ public class RecommendService {
     private final ChatMessageRepository messageRepo;
     private final RecommendRepository recommendRepo;
     private final IntentService intentService;
-    private final Retriever retriever;
     private final OrderFactsClient factsClient;
     private final GptClient gpt;
     private final PromptBuilder promptBuilder;
     private final SimpMessagingTemplate messaging;
+    // PG RAG 경로 통합 파사드 (토글 포함)
+    private final DocRetrievalFacade docRetriever;
 
     private final ObjectMapper om = new ObjectMapper();
 
@@ -162,10 +165,10 @@ public class RecommendService {
         // 2) order facts (떡볶이/금액/시간 등 포함)
         var facts = factsClient.buildFacts(m, m.getChatSession().getOrder());
 
-        // 3) RAG retrieve
-        var docs = retriever.retrieve(m.getOriginalText(), intent, topK);
+        // 3) RAG: 토글 포함 파사드 사용 (PG pgvector or 기존 키워드형)
+        List<KnowledgeBase.Doc> docs = docRetriever.retrieve(m.getOriginalText(), intent, topK);
 
-        // 4) LLM 호출
+        // 4) LLM 호출 페이로드 구성
         JsonNode payload = promptBuilder.build(docs, m.getOriginalText(), intent, facts, N, bizDays);
         JsonNode res = gpt.chat(payload);
 

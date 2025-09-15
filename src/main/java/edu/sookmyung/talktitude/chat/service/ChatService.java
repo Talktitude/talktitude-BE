@@ -359,11 +359,24 @@ public class ChatService {
         List<ChatSession> finishedEntities =
                 chatSessionRepository.findByClient_IdAndStatus(clientId, Status.FINISHED);
 
+        // 마지막 메시지 시각 계산 함수
+        java.util.function.Function<ChatSession, LocalDateTime> lastMessageOrCreated =
+                cs -> chatMessageRepository
+                        .findTopByChatSessionOrderByCreatedAtDesc(cs)
+                        .map(ChatMessage::getCreatedAt)
+                        .orElse(cs.getCreatedAt());
+
+        // 진행중: 마지막 메시지 최신순
         List<ClientChatSessionDto> inProgress = inProgEntities.stream()
+                .sorted(Comparator.comparing((ChatSession cs) -> lastMessageOrCreated.apply(cs))
+                        .reversed())
                 .map(this::toClientItem)
                 .toList();
 
+        // 종료: 마지막 메시지 최신순
         List<ClientChatSessionDto> finished = finishedEntities.stream()
+                .sorted(Comparator.comparing((ChatSession cs) -> lastMessageOrCreated.apply(cs))
+                        .reversed())
                 .map(this::toClientItem)
                 .toList();
 
@@ -385,7 +398,14 @@ public class ChatService {
                         : m.getOriginalText())
                 .orElse("대화가 시작되었습니다.");
 
-        // 2. 가게/주문 요약/총액
+        // 2. 마지막 메시지 시각(없으면 세션 생성 시각)
+        long lastMillis = chatMessageRepository
+                .findTopByChatSessionOrderByCreatedAtDesc(cs)
+                .map(ChatMessage::getCreatedAt)
+                .map(DateTimeUtils::toEpochMillis)
+                .orElse(DateTimeUtils.toEpochMillis(cs.getCreatedAt()));
+
+        // 3. 가게/주문 요약/총액
         String storeName = null;
         String storeImageUrl = null;
         String orderSummary = "주문 외 문의";
@@ -428,7 +448,8 @@ public class ChatService {
                 storeName,
                 storeImageUrl,
                 orderSummary,
-                lastMessage
+                lastMessage,
+                lastMillis
         );
     }
 

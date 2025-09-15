@@ -468,4 +468,57 @@ public class ChatService {
     public List<ChatMessage> getRecentMessages(Long sessionId,int count){
         return chatMessageRepository.findRecentByChatSessionId(sessionId,count);
     }
+
+    // 고객 목록 갱신 푸시용 DTO 생성
+    public ClientSessionUpdatedPush buildClientUpdatedPush(ChatSession cs) {
+        // 1. 마지막 메시지 시간 & 고객 화면에 보여질 lastMessage
+        var lastMsgOpt = chatMessageRepository.findTopByChatSessionOrderByCreatedAtDesc(cs);
+        long lastMillis = DateTimeUtils.toEpochMillis(
+                lastMsgOpt.map(ChatMessage::getCreatedAt).orElse(cs.getCreatedAt())
+        );
+
+        String lastMessage = lastMsgOpt
+                .map(m -> (m.getSenderType() == SenderType.CLIENT)
+                        ? (m.getConvertedText() != null ? m.getConvertedText() : m.getOriginalText())
+                        : m.getOriginalText())
+                .orElse("대화가 시작되었습니다.");
+
+        // 2. 주문 요약
+        String storeName = null;
+        String storeImageUrl = null;
+        String orderSummary = "주문 외 문의";
+
+        if (cs.getOrder() != null) {
+            Order order = cs.getOrder();
+            var r = order.getRestaurant();
+
+            // 메뉴 요약
+            List<OrderMenu> menus = orderMenuRepository.findByOrderId(order.getId());
+            String summaryCore;
+            if (menus != null && !menus.isEmpty()) {
+                String first = menus.get(0).getMenu();
+                int others = Math.max(0, menus.size() - 1);
+                summaryCore = (others > 0) ? first + " 외 " + others + "개" : first;
+            } else {
+                summaryCore = "주문 외 문의";
+            }
+
+            // 결제 금액
+            Integer paidAmount = orderPaymentRepository.findPaidAmountByOrderId(order.getId()).orElse(null);
+            orderSummary = (paidAmount != null)
+                    ? summaryCore + " " + String.format("%,d원", paidAmount)
+                    : summaryCore;
+        }
+
+        return ClientSessionUpdatedPush.builder()
+                .sessionId(cs.getId())
+                .status(cs.getStatus().name())
+                .storeName(storeName)
+                .storeImageUrl(storeImageUrl)
+                .orderSummary(orderSummary)
+                .lastMessage(lastMessage)
+                .lastMessageTime(lastMillis)
+                .build();
+
+    }
 }

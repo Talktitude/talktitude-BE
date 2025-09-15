@@ -103,7 +103,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "https://localhost:3000",
                 "https://localhost:3001",
-                "https://talktitude-client-fe.vercel.app"
+                "https://talktitude-client-fe.vercel.app",
+                "https://talktitude-agent-fe.vercel.app "
         ));
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

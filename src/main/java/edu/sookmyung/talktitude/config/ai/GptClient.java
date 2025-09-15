@@ -32,7 +32,12 @@ public class GptClient {
     @Value("${ai.openai.base-url:https://api.openai.com}")
     private String baseUrl;
 
-    private static final String DEFAULT_CHAT_MODEL = "gpt-3.5-turbo";
+    @Value("${ai.openai.chat-model:gpt-4o-mini}")
+    private String defaultChatModel;
+
+    @Value("${ai.openai.embedding-model:text-embedding-3-small}")
+    private String defaultEmbeddingModel;
+
     private WebClient webClient;
 
     @PostConstruct
@@ -40,24 +45,20 @@ public class GptClient {
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("OPENAI_API_KEY not provided");
         }
-
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeader("Authorization", "Bearer " + apiKey)
                 .build();
 
-        log.info("GptClient initialized. baseUrl={}, model={}", baseUrl, DEFAULT_CHAT_MODEL);
+        log.info("GptClient initialized. baseUrl={}, chatModel={}, embeddingModel={}",
+                baseUrl, defaultChatModel, defaultEmbeddingModel);
     }
 
-    public JsonNode chat(JsonNode payload) {
+    /** 공통 POST 호출 (JSON 반환) */
+    private JsonNode post(String path, ObjectNode body) {
         try {
-            ObjectNode body = payload.deepCopy();
-            if (!body.hasNonNull("model")) {
-                body.put("model", DEFAULT_CHAT_MODEL);
-            }
-
             return webClient.post()
-                    .uri("/v1/chat/completions")
+                    .uri(path)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(body.toString())
                     .retrieve()
@@ -72,15 +73,40 @@ public class GptClient {
                                 ));
                             })
                     )
-                    // ✅ 여기만 변경: 문자열이 아니라 JsonNode로 바로 받기
-                    .bodyToMono(com.fasterxml.jackson.databind.JsonNode.class)
+                    .bodyToMono(JsonNode.class)
                     .block();
-
         } catch (WebClientResponseException e) {
             log.error("OpenAI error {}: {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new BaseException(ErrorCode.GPT_API_FAILED);
         } catch (Exception e) {
+            log.error("OpenAI call failed", e);
             throw new BaseException(ErrorCode.GPT_API_FAILED);
         }
+    }
+
+    /** Chat Completions */
+    public JsonNode chat(JsonNode payload) {
+        ObjectNode body = payload.deepCopy();
+        if (!body.hasNonNull("model")) {
+            body.put("model", defaultChatModel);
+        }
+        return post("/v1/chat/completions", body);
+    }
+
+    /** Embeddings API (payload 직접 전달) */
+    public JsonNode embeddings(JsonNode payload) {
+        ObjectNode body = payload.deepCopy();
+        if (!body.hasNonNull("model")) {
+            body.put("model", defaultEmbeddingModel);
+        }
+        return post("/v1/embeddings", body);
+    }
+
+    /** Embeddings API (간편 호출) */
+    public JsonNode embeddings(String input) {
+        ObjectNode body = om.createObjectNode();
+        body.put("model", defaultEmbeddingModel);
+        body.putArray("input").add(input == null ? "" : input);
+        return post("/v1/embeddings", body);
     }
 }

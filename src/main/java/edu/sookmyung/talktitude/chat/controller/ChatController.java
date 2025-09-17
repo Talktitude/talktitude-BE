@@ -4,6 +4,8 @@ import edu.sookmyung.talktitude.chat.dto.*;
 import edu.sookmyung.talktitude.chat.dto.recommend.CreateMessageRequest;
 import edu.sookmyung.talktitude.chat.dto.recommend.RecommendListDto;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
+import edu.sookmyung.talktitude.chat.model.SenderType;
+import edu.sookmyung.talktitude.chat.service.ChatMediaService;
 import edu.sookmyung.talktitude.chat.service.ChatService;
 import edu.sookmyung.talktitude.chat.service.RecommendService;
 import edu.sookmyung.talktitude.client.model.Client;
@@ -13,7 +15,10 @@ import edu.sookmyung.talktitude.member.model.Member;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -23,10 +28,12 @@ public class ChatController {
 
     private final ChatService chatService;
     private final RecommendService recommendService;
+    private final ChatMediaService chatMediaService;
 
-    public ChatController(ChatService chatService, RecommendService recommendService) {
+    public ChatController(ChatService chatService, RecommendService recommendService, ChatMediaService chatMediaService) {
         this.chatService = chatService;
         this.recommendService = recommendService;
+        this.chatMediaService = chatMediaService;
     }
 
     // 고객 - 상담 세션 생성
@@ -200,5 +207,16 @@ public class ChatController {
         // 이미 생성된 게 있으면 재사용
         RecommendListDto data = recommendService.generate(lastClient.getId());
         return ResponseEntity.ok(ApiResponse.ok(data, "최근 고객 메시지에 대한 추천 반환"));
+    }
+
+    // 채팅 이미지 전송
+    @PostMapping(value = "/{sessionId}/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ChatMediaResponse>> uploadMedia(
+            @PathVariable Long sessionId,
+            @RequestPart("file") List<MultipartFile> files
+    ) throws IOException {
+        // 현재는 고객 전송 가정 (필요 시 토큰에서 역할 판별)
+        ChatMediaResponse dto = chatMediaService.uploadMedia(sessionId, SenderType.CLIENT, files);
+        return ResponseEntity.ok(ApiResponse.ok(dto, "이미지 업로드 성공"));
     }
 }

@@ -211,9 +211,12 @@ public class ChatController {
 
     // 채팅 이미지 전송
     @PostMapping(value = "/{sessionId}/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ChatMediaResponse uploadMedia(@PathVariable Long sessionId,
-                                         @RequestPart("file") List<MultipartFile> files) throws IOException {
-        // 현재는 고객 전송 가정 (필요시 토큰에서 역할 판별)
-        return chatMediaService.uploadMedia(sessionId, SenderType.CLIENT, files);
+    public ResponseEntity<ApiResponse<ChatMediaResponse>> uploadMedia(
+            @PathVariable Long sessionId,
+            @RequestPart("file") List<MultipartFile> files
+    ) throws IOException {
+        // 현재는 고객 전송 가정 (필요 시 토큰에서 역할 판별)
+        ChatMediaResponse dto = chatMediaService.uploadMedia(sessionId, SenderType.CLIENT, files);
+        return ResponseEntity.ok(ApiResponse.ok(dto, "이미지 업로드 성공"));
     }
 }

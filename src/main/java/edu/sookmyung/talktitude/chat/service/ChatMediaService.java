@@ -1,7 +1,7 @@
 package edu.sookmyung.talktitude.chat.service;
 
-
-import edu.sookmyung.talktitude.chat.dto.ChatMediaResponse;
+import edu.sookmyung.talktitude.chat.dto.ChatMessageResponse;
+import edu.sookmyung.talktitude.chat.dto.MediaDto;
 import edu.sookmyung.talktitude.chat.model.*;
 import edu.sookmyung.talktitude.chat.repository.ChatMediaRepository;
 import edu.sookmyung.talktitude.chat.repository.ChatMessageRepository;
@@ -30,7 +30,7 @@ public class ChatMediaService {
     private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
-    public ChatMediaResponse uploadMedia(Long sessionId, SenderType senderType, List<MultipartFile> files) throws IOException {
+    public ChatMessageResponse uploadMedia(Long sessionId, SenderType senderType, List<MultipartFile> files) throws IOException {
         ChatSession session = chatSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
 
@@ -54,12 +54,32 @@ public class ChatMediaService {
             }
         }).toList();
 
-        ChatMediaResponse response = new ChatMediaResponse(message, medias);
+        // MediaDto 변환
+        List<MediaDto> mediaDtos = medias.stream()
+                .map(m -> MediaDto.builder()
+                        .mediaType(m.getMediaType())
+                        .url(m.getMediaUrl())
+                        .size(m.getMediaSize())
+                        .build())
+                .toList();
 
-        // 상담원/고객 각자 큐로 전송
-        messagingTemplate.convertAndSendToUser(session.getMember().getLoginId(), "/queue/chat/" + session.getId() + "/media", response);
-        messagingTemplate.convertAndSendToUser(session.getClient().getLoginId(), "/queue/chat/" + session.getId() + "/media", response);
+        // 수신자별 페이로드(텍스트는 null, 이미지만 포함)
+        ChatMessageResponse forAgent  = ChatMessageResponse.withMedias(message, "MEMBER", mediaDtos);
+        ChatMessageResponse forClient = ChatMessageResponse.withMedias(message, "CLIENT", mediaDtos);
 
-        return response;
+        // 동일 채널로 푸시: /user/queue/chat/{sessionId}
+        messagingTemplate.convertAndSendToUser(
+                session.getMember().getLoginId(),
+                "/queue/chat/" + session.getId(),
+                forAgent
+        );
+        messagingTemplate.convertAndSendToUser(
+                session.getClient().getLoginId(),
+                "/queue/chat/" + session.getId(),
+                forClient
+        );
+
+        // 업로드 API 응답은 호출자 관점(지금은 고객 전송 가정이므로 CLIENT 뷰 반환)
+        return forClient;
     }
 }

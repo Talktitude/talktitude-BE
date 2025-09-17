@@ -58,24 +58,10 @@ public class ChatWebSocketController {
 
         // 3. 수신자별 표시 형태 구성
         // 상담원: 공손문(있으면) 표시, 원문보기 버튼 O
-        ChatMessageResponse forAgent = new ChatMessageResponse(
-                message.getId(),
-                (message.getConvertedText() != null) ? message.getConvertedText() : message.getOriginalText(),
-                message.getOriginalText(),
-                (message.getConvertedText() != null),
-                message.getSenderType().name(),
-                createdAtMs
-        );
+        ChatMessageResponse forAgent  = new ChatMessageResponse(message, "MEMBER");
 
         // 고객: 항상 원문, 원문보기 버튼 X
-        ChatMessageResponse forClient = new ChatMessageResponse(
-                message.getId(),
-                message.getOriginalText(),
-                message.getOriginalText(),
-                false,
-                message.getSenderType().name(),
-                createdAtMs
-        );
+        ChatMessageResponse forClient = new ChatMessageResponse(message, "CLIENT");
 
         // 4. 채팅 메시지 푸시(사용자 큐로 전송)
         messagingTemplate.convertAndSendToUser(agentLoginId,  "/queue/chat/" + sessionId, forAgent);

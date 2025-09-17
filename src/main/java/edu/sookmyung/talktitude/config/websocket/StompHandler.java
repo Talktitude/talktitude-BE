@@ -69,16 +69,23 @@ public class StompHandler implements ChannelInterceptor {
 
     private Long extractSessionId(String dest) {
         if (dest == null) return null;
-        try {
-            if (dest.startsWith("/topic/chat/")) {
-                return Long.valueOf(dest.substring("/topic/chat/".length()));
+
+        // 허용 접두사 모두 지원: 구독(/user/queue), 브로커(/topic), 송신(/app)까지
+        String[] prefixes = { "/user/queue/chat/", "/topic/chat/", "/app/chat/" };
+
+        for (String p : prefixes) {
+            int pos = dest.indexOf(p);
+            if (pos >= 0) {
+                int start = pos + p.length();
+                int end = dest.indexOf('/', start); // 다음 슬래시 위치(없으면 끝까지)
+                String idStr = (end == -1) ? dest.substring(start) : dest.substring(start, end);
+                try {
+                    return Long.parseLong(idStr);
+                } catch (NumberFormatException ignored) {
+                    // 못 파싱하면 다음 접두사 시도
+                }
             }
-            if (dest.startsWith("/user/queue/chat/")) {
-                return Long.valueOf(dest.substring("/user/queue/chat/".length()));
-            }
-        } catch (NumberFormatException e) {
-            log.error("[STOMP] Invalid sessionId in destination: {}", dest, e);
         }
-        return null;
+        return null; // 매칭되는 접두사가 없거나 숫자 파싱 실패
     }
 }

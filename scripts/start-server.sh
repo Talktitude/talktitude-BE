@@ -20,14 +20,14 @@ aws ecr get-login-password --region ap-northeast-2 | \
 docker login --username AWS --password-stdin $ECR_REGISTRY
 
 # 기존 컨테이너 정리
-docker stop $ECR_REGISTRY/talktitude || true
-docker rm $ECR_REGISTRY/talktitude || true
+docker stop talktitude-docker-server || true
+docker rm talktitude-docker-server || true
 
 # 최신 이미지 pull
-docker pull $ECR_REGISTRY/talktitude:latest
+docker pull $ECR_REGISTRY/talktitude-docker-server:latest
 
 docker run -d \
-  --name talktitude \
+  --name talktitude-docker-server \
   -p 8080:8080 \
   -e DB_URL="$DB_URL" \
   -e DB_USERNAME="$DB_USERNAME" \
@@ -42,6 +42,6 @@ docker run -d \
   -e AWS_REGION="$AWS_REGION" \
   -e AWS_BUCKET="$AWS_BUCKET" \
   -e AWS_BUCKET_ONNX ="$AWS_BUCKET_ONNX"
-  $ECR_REGISTRY/talktitude:latest
+  $ECR_REGISTRY/talktitude-docker-server:latest
 
 echo "--------------- 서버 배포 완료 -----------------"

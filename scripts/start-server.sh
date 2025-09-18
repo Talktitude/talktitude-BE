@@ -14,15 +14,14 @@ AWS_BUCKET=$(aws ssm get-parameter --name "/talktitude/aws-bucket" --query "Para
 ECR_REGISTRY=$(aws ssm get-parameter --name "/talktitude/ecr-registry" --query "Parameter.Value" --output text)
 AWS_BUCKET_ONNX=$(aws ssm get-parameter --name "/talktitude/aws-bucket-onnx" --query "Parameter.Value" --output text)
 
-
 echo "ECR 레지스트리: $ECR_REGISTRY"
 
-
 aws ecr get-login-password --region ap-northeast-2 | \
-    sudo docker login --username AWS --password-stdin $ECR_REGISTRY
+sudo docker login --username AWS --password-stdin $ECR_REGISTRY
+
 # 기존 컨테이너 정리
-sudo docker stop talktitude || true
-sudo docker rm talktitude || true
+sudo docker stop $ECR_REGISTRY/talktitude || true
+sudo docker rm $ECR_REGISTRY/talktitude || true
 
 # 최신 이미지 pull
 sudo docker pull $ECR_REGISTRY/talktitude:latest

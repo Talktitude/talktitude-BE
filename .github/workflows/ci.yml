@@ -1,17 +1,21 @@
-name: Deploy To EC2
+name: Deploy To EC2 with DOCKER
+
 on:
   push:
     branches:
-      - dev
-  pull_request:
-    branches:
-      - dev
+      - 59-feat-공손-변환-기능-onnx-mh
+
+env:
+  AWS_REGION: ap-northeast-2
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Github Repository 파일 불러오기
         uses: actions/checkout@v4
+
       - name: JDK 21버전 설치
         uses: actions/setup-java@v4
         with:
@@ -20,55 +24,54 @@ jobs:
 
       - name: Gradle wrapper 실행 권한 부여
         run: chmod +x ./gradlew
+
       - name: 테스트 및 빌드하기
         run: ./gradlew clean build -x test
+
       - name: 빌드된 파일 이름 변경하기
         run: mv ./build/libs/*SNAPSHOT.jar ./talktitude.jar
-      - name: SCP로 EC2에 빌드된 파일 전송하기
-        uses: appleboy/scp-action@v0.1.7
+
+      - name: AWS 자격 증명 구성
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: talktitude.jar
-          target: /home/ubuntu/talktitude/tobe
-      - name: SSH로 EC2에 접속하기
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script_stop: true
-          script: |
-            # 디렉토리 구조 정리
-            rm -rf /home/ubuntu/talktitude/current
-            mkdir -p /home/ubuntu/talktitude/current
-            mv /home/ubuntu/talktitude/tobe/talktitude.jar /home/ubuntu/talktitude/current/talktitude.jar
-            cd /home/ubuntu/talktitude/current
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-            # 기존 프로세스 종료
-            sudo fuser -k -n tcp 8080 || true
+      - name: Amazon ECR 로그인
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-            # Spring Boot 애플리케이션 실행
-            nohup java -jar talktitude.jar \
-              --server.port=8080 \
-              --spring.datasource.url=${{secrets.RDS_URL}} \
-              --spring.datasource.username=${{secrets.RDS_USERNAME}} \
-              --spring.datasource.password=${{secrets.RDS_PASSWORD}} \
-              --spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver \
-              --spring.jpa.hibernate.ddl-auto=update \
-              --spring.jpa.show-sql=true \
-              --spring.ai.openai.api-key=${{ secrets.OPENAI_API_KEY }} \
-              --spring.ai.openai.base-url=${{secrets.OPENAI_BASE_URL}} \
-              --ai.openai.api-key='${{ secrets.OPENAI_API_KEY }}' \
-              --ai.openai.base-url=${{secrets.OPENAI_BASE_URL}} \
-              --jwt.issuer=talktitude \
-              --jwt.secret_key=${{ secrets.JWT_SECRET_KEY }} \
-              --AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}' \
-              --AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
-              --AWS_REGION='${{ secrets.AWS_REGION }}' \
-              --AWS_BUCKET='${{ secrets.AWS_BUCKET }}' \
-              > ./output.log 2>&1 &
+      - name: Docker 이미지 빌드 및 푸시
+        run: |
+          docker build -t talktitude:latest .
+          docker tag talktitude:latest ${{ steps.login-ecr.outputs.registry }}/talktitude:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/talktitude:latest
 
-            # 파일 정리
-            rm -rf /home/ubuntu/talktitude/tobe
+      - name: 압축하기
+        run: tar -czvf $GITHUB_SHA.tar.gz appspec.yml scripts
+
+      - name: S3에 프로젝트 폴더 업로드하기
+        run: aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.tar.gz s3://talktitude-deploy-bucket/$GITHUB_SHA.tar.gz
+
+      - name: Code Deploy를 활용해 EC2에 프로젝트 코드 배포
+        run: |
+            aws deploy create-deployment \
+          --application-name talktitude-docker-server \
+          --deployment-config-name CodeDeployDefault.AllAtOnce \
+          --deployment-group-name Production \
+          --s3-location bucket=talktitude-deploy-bucket,bundleType=tgz,key=$GITHUB_SHA.tar.gz
+
+      - name: 모든 환경변수를 Parameter Store에 저장
+        run: |
+          aws ssm put-parameter --name "/talktitude/db-url" --value "${{ secrets.RDS_URL }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/db-username" --value "${{ secrets.RDS_USERNAME }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/db-password" --value "${{ secrets.RDS_PASSWORD }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/openai-api-key" --value "${{ secrets.OPENAI_API_KEY }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/jwt-secret" --value "${{ secrets.JWT_SECRET_KEY }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/aws-access-key" --value "${{ secrets.AWS_ACCESS_KEY_ID }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/aws-secret-key" --value "${{ secrets.AWS_SECRET_ACCESS_KEY }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/aws-region" --value "${{ secrets.AWS_REGION }}" --type "String" --overwrite
+          aws ssm put-parameter --name "/talktitude/aws-bucket" --value "${{ secrets.AWS_BUCKET }}" --type "String" --overwrite
+          aws ssm put-parameter --name "/talktitude/aws-bucket-onnx" --value "${{ secrets.AWS_BUCKET_ONNX }}" --type "String" --overwrite
+          aws ssm put-parameter --name "/talktitude/ecr-registry" --value "${{ steps.login-ecr.outputs.registry }}" --type "String" --overwrite

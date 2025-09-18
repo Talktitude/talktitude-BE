@@ -19,10 +19,10 @@ public class S3Service {
     private final String bucket;
 
     public S3Service(
-            @Value("${AWS_ACCESS_KEY_ID}") String accessKey,
-            @Value("${AWS_SECRET_ACCESS_KEY}") String secretKey,
-            @Value("${AWS_REGION}") String region,
-            @Value("${AWS_BUCKET}") String bucket) {
+            @Value("${aws.access-key}") String accessKey,
+            @Value("${aws.secret-key}") String secretKey,
+            @Value("${aws.region}") String region,
+            @Value("${aws.bucket}") String bucket) {
 
         this.s3Client = AmazonS3ClientBuilder.standard()
                 .withRegion(region)

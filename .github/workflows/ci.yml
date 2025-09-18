@@ -51,6 +51,13 @@ jobs:
       - name: 압축하기
         run: tar -czvf $GITHUB_SHA.tar.gz appspec.yml scripts
 
+      - name: 압축 파일 확인
+        run: |
+          echo "GITHUB_SHA: $GITHUB_SHA"
+          ls -la *.tar.gz
+          echo "압축 내용 확인:"
+          tar -tzvf $GITHUB_SHA.tar.gz
+
       - name: S3에 프로젝트 폴더 업로드하기
         run: aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.tar.gz s3://talktitude-deploy-bucket/$GITHUB_SHA.tar.gz
 

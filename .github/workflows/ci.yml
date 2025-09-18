@@ -48,6 +48,20 @@ jobs:
           docker tag talktitude-docker-server:latest ${{ steps.login-ecr.outputs.registry }}/talktitude-docker-server:latest
           docker push ${{ steps.login-ecr.outputs.registry }}/talktitude-docker-server:latest
 
+      - name: 모든 환경변수를 Parameter Store에 저장
+        run: |
+          aws ssm put-parameter --name "/talktitude/db-url" --value "${{ secrets.RDS_URL }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/db-username" --value "${{ secrets.RDS_USERNAME }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/db-password" --value "${{ secrets.RDS_PASSWORD }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/openai-api-key" --value "${{ secrets.OPENAI_API_KEY }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/jwt-secret" --value "${{ secrets.JWT_SECRET_KEY }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/aws-access-key" --value "${{ secrets.AWS_ACCESS_KEY_ID }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/aws-secret-key" --value "${{ secrets.AWS_SECRET_ACCESS_KEY }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/aws-region" --value "${{ secrets.AWS_REGION }}" --type "String" --overwrite
+          aws ssm put-parameter --name "/talktitude/aws-bucket" --value "${{ secrets.AWS_BUCKET }}" --type "String" --overwrite
+          aws ssm put-parameter --name "/talktitude/aws-bucket-onnx" --value "${{ secrets.AWS_BUCKET_ONNX }}" --type "String" --overwrite
+          aws ssm put-parameter --name "/talktitude/ecr-registry" --value "${{ steps.login-ecr.outputs.registry }}" --type "String" --overwrite
+
       - name: 압축하기
         run: tar -czvf $GITHUB_SHA.tar.gz appspec.yml scripts
 
@@ -72,16 +86,4 @@ jobs:
           --deployment-group-name Production \
           --s3-location bucket=talktitude-deploy-bucket,bundleType=tgz,key=$GITHUB_SHA.tar.gz
 
-      - name: 모든 환경변수를 Parameter Store에 저장
-        run: |
-          aws ssm put-parameter --name "/talktitude/db-url" --value "${{ secrets.RDS_URL }}" --type "SecureString" --overwrite
-          aws ssm put-parameter --name "/talktitude/db-username" --value "${{ secrets.RDS_USERNAME }}" --type "SecureString" --overwrite
-          aws ssm put-parameter --name "/talktitude/db-password" --value "${{ secrets.RDS_PASSWORD }}" --type "SecureString" --overwrite
-          aws ssm put-parameter --name "/talktitude/openai-api-key" --value "${{ secrets.OPENAI_API_KEY }}" --type "SecureString" --overwrite
-          aws ssm put-parameter --name "/talktitude/jwt-secret" --value "${{ secrets.JWT_SECRET_KEY }}" --type "SecureString" --overwrite
-          aws ssm put-parameter --name "/talktitude/aws-access-key" --value "${{ secrets.AWS_ACCESS_KEY_ID }}" --type "SecureString" --overwrite
-          aws ssm put-parameter --name "/talktitude/aws-secret-key" --value "${{ secrets.AWS_SECRET_ACCESS_KEY }}" --type "SecureString" --overwrite
-          aws ssm put-parameter --name "/talktitude/aws-region" --value "${{ secrets.AWS_REGION }}" --type "String" --overwrite
-          aws ssm put-parameter --name "/talktitude/aws-bucket" --value "${{ secrets.AWS_BUCKET }}" --type "String" --overwrite
-          aws ssm put-parameter --name "/talktitude/aws-bucket-onnx" --value "${{ secrets.AWS_BUCKET_ONNX }}" --type "String" --overwrite
-          aws ssm put-parameter --name "/talktitude/ecr-registry" --value "${{ steps.login-ecr.outputs.registry }}" --type "String" --overwrite
+

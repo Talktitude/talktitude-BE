@@ -41,7 +41,7 @@ docker run -d \
   -e AWS_DEFAULT_REGION="ap-northeast-2" \
   -e AWS_REGION="$AWS_REGION" \
   -e AWS_BUCKET="$AWS_BUCKET" \
-  -e AWS_BUCKET_ONNX ="$AWS_BUCKET_ONNX" \
+  -e AWS_BUCKET_ONNX="$AWS_BUCKET_ONNX" \
   $ECR_REGISTRY/talktitude-docker-server:latest
 
 echo "--------------- 서버 배포 완료 -----------------"

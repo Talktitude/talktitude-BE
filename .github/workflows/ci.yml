@@ -3,7 +3,10 @@ name: Deploy To EC2 with DOCKER
 on:
   push:
     branches:
-      - 59-feat-공손-변환-기능-onnx-mh
+      - dev
+  pull_request:
+    branches:
+      - dev
 
 env:
   AWS_REGION: ap-northeast-2

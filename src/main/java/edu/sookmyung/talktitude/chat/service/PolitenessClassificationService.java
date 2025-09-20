@@ -14,6 +14,7 @@ import edu.sookmyung.talktitude.common.exception.ErrorCode;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PolitenessClassificationService {
@@ -294,6 +296,7 @@ public class PolitenessClassificationService {
     }
 
     // 내부 클래스들
+
     private static class PolitenessAnalysis {
         public final String finalJudgment;
         public final String reason;
@@ -331,6 +334,7 @@ public class PolitenessClassificationService {
         }
 
         public boolean hasNegativeEmotions() {
+            log.info("emotions"+ emotions);
             return emotions.stream().anyMatch(e -> negativeEmotions.contains(e.label));
         }
 

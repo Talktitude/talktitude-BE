@@ -29,7 +29,7 @@ jobs:
         run: |
           ./gradlew clean
           rm -rf build/
-          ./gradlew build -x test --no-build-cache --recompile-groovy
+          ./gradlew build -x test --no-build-cache 
 
       - name: 빌드 결과 확인
         run: |

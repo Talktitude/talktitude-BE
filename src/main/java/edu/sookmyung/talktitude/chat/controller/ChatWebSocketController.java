@@ -115,6 +115,8 @@ public class ChatWebSocketController {
     //공손화 처리 로직
     private String processMessagePoliteness(String originalText, Long sessionId) {
         try{
+            log.info("공손 판별 시작");
+
             PolitenessClassificationService.FilteredMultiHeadResult classificationResult =
                     politenessClassificationService.classify(originalText);
 
@@ -140,12 +142,17 @@ public class ChatWebSocketController {
                     politenessClassificationService.classify(currentText);
 
             log.info("2차 분류 결과: {}", secondResult);
+            log.info("secondResult.text: {}", secondResult.text);
+            log.info("secondResult.finalJudgment: {}", secondResult.finalJudgment);
+            log.info("secondResult.reason: {}", secondResult.reason);
+            log.info("secondResult.emotions size: {}", secondResult.emotions.size());
 
-            log.info("finalJudgment: {}", secondResult.finalJudgment);
-            log.info("hasNegativeEmotions: {}", secondResult.hasNegativeEmotions());
-            log.info("조건 체크: !polite={}, hasNegative={}",
-                    !"polite".equals(secondResult.finalJudgment),
-                    secondResult.hasNegativeEmotions());
+            log.info("finalJudgment: '{}' (길이: {}), !\"polite\".equals(): {}",
+                    secondResult.finalJudgment,
+                    secondResult.finalJudgment != null ? secondResult.finalJudgment.length() : "null",
+                    !"polite".equals(secondResult.finalJudgment));
+
+
 
             // 공손하지만 부정적 감정이 있는 경우 2차 변환
             if (!"polite".equals(secondResult.finalJudgment) && secondResult.hasNegativeEmotions()) {

@@ -34,7 +34,7 @@ public class PolitenessClassificationService {
 
     private static final int MAX_LENGTH = 256;
     private static final long PAD_ID = 1L;
-    private static final float EMOTION_THRESHOLD = 0.1f;
+    private static final float EMOTION_THRESHOLD = 0.3f;
 
     // S3에서 다운로드할 파일들
     private static final String MODEL_FILE = "multihead_filtered_model_reduce.onnx"; //ONNX로 변환한 실제 AI 모델

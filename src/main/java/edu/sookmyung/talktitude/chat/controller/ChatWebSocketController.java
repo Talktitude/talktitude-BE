@@ -129,25 +129,24 @@ public class ChatWebSocketController {
                 if (currentText == null) {
                     currentText = originalText; // 변환 실패시 원문 사용
                 }
-                log.info("1차 변환 결과: {}", currentText);
+                return currentText;
             }
 
             // 2단계: 변환된 텍스트(또는 원문)를 다시 분류하여 부정적 감정 체크
             PolitenessClassificationService.FilteredMultiHeadResult secondResult =
-                    politenessClassificationService.classify(originalText);
+                    politenessClassificationService.classify(currentText);
 
             log.info("2차 분류 결과: {}", secondResult);
 
             // 공손하지만 부정적 감정이 있는 경우 2차 변환
-            if ("polite".equals(secondResult.finalJudgment)  && secondResult.hasNegativeEmotions()) {
+            if (secondResult.hasNegativeEmotions()) {
                 log.info("공손하지만 부정적 감정 감지 - 2차 공손화 변환 수행");
-                String finalText = convertToPolite(originalText, sessionId);
+                String finalText = convertToPolite(currentText, sessionId);
                 if (finalText != null) {
                     currentText = finalText;
                 }
                 log.info("2차 변환 결과: {}", currentText);
             }
-
             // 원문과 같으면 null 반환 (변환 없음을 의미)
             return currentText.equals(originalText) ? null : currentText;
 

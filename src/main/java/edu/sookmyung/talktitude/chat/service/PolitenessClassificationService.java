@@ -80,7 +80,7 @@ public class PolitenessClassificationService {
             1, "impolite"
     );
 
-    private final Set<String> negativeEmotions = Set.of(
+    private static final Set<String> negativeEmotions = Set.of(
             "짜증", "화남/분노", "어이없음", "불평/불만",
             "우쭐댐/무시함", "의심/불신", "한심함"
     );
@@ -331,9 +331,7 @@ public class PolitenessClassificationService {
         }
 
         public boolean hasNegativeEmotions() {
-            Set<String> negativeSet = Set.of("짜증", "화남/분노", "어이없음", "불평/불만",
-                    "우쭐댐/무시함", "의심/불신", "한심함");
-            return emotions.stream().anyMatch(e -> negativeSet.contains(e.label));
+            return emotions.stream().anyMatch(e -> negativeEmotions.contains(e.label));
         }
 
         public boolean isImpolite() {

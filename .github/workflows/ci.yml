@@ -63,9 +63,14 @@ jobs:
 
       - name: Docker 이미지 빌드 및 푸시
         run: |
-          docker build -t talktitude-docker-server:latest .
+          # 기존 이미지와 컨테이너 정리
+          docker system prune -f
+
+          # 완전 새로 빌드 (캐시 무시)
+          docker build --no-cache --pull -t talktitude-docker-server:latest .
           docker tag talktitude-docker-server:latest ${{ steps.login-ecr.outputs.registry }}/talktitude-docker-server:latest
           docker push ${{ steps.login-ecr.outputs.registry }}/talktitude-docker-server:latest
+          
 
       - name: 모든 환경변수를 Parameter Store에 저장
         run: |

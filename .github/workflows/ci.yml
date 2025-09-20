@@ -26,7 +26,20 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: 테스트 및 빌드하기
-        run: ./gradlew clean build -x test
+        run: |
+          ./gradlew clean
+          rm -rf build/
+          ./gradlew build -x test --no-build-cache --recompile-groovy
+      
+
+      - name: 빌드 결과 확인
+        run: |
+          echo "=== JAR 파일 확인 ==="
+          ls -la ./build/libs/
+          echo "=== JAR 내용 확인 ==="
+          jar -tf ./build/libs/*SNAPSHOT.jar | grep ChatWebSocketController
+          echo "=== 빌드 시간 확인 ==="
+          stat ./build/libs/*SNAPSHOT.jar    
 
       - name: 빌드된 파일 이름 변경하기
         run: mv ./build/libs/*SNAPSHOT.jar ./talktitude.jar

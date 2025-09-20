@@ -16,14 +16,15 @@ AWS_BUCKET_ONNX=$(aws ssm get-parameter --name "/talktitude/aws-bucket-onnx" --q
 
 echo "ECR 레지스트리: $ECR_REGISTRY"
 
+# 기존 컨테이너와 이미지 완전 삭제
+docker stop talktitude-docker-server || true
+docker rm talktitude-docker-server || true
+docker rmi $ECR_REGISTRY/talktitude-docker-server:latest || true
+
 aws ecr get-login-password --region ap-northeast-2 | \
 docker login --username AWS --password-stdin $ECR_REGISTRY
 
-# 기존 컨테이너 정리
-docker stop talktitude-docker-server || true
-docker rm talktitude-docker-server || true
-
-# 최신 이미지 pull
+# 강제로 새 이미지 pull
 docker pull $ECR_REGISTRY/talktitude-docker-server:latest
 
 docker run -d \

@@ -13,6 +13,7 @@ import edu.sookmyung.talktitude.chat.service.PolitenessClassificationService;
 import edu.sookmyung.talktitude.chat.service.RecommendService;
 import edu.sookmyung.talktitude.common.util.DateTimeUtils;
 import edu.sookmyung.talktitude.config.ai.GPTProperties;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -37,6 +38,14 @@ public class ChatWebSocketController {
     private final PolitenessClassificationService politenessClassificationService;
 
 
+    @PostConstruct
+    public void init() {
+        //완전히 눈에 띄게 설정
+        log.info("\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4DInit ChatWebSocketController");
+        log.info("🚀🚀🚀 NEW CODE DEPLOYED! 새 코드 배포됨! 🚀🚀🚀");
+        log.info("🔥 ChatWebSocketController 초기화 완료 ");
+        log.info("=".repeat(80));
+    }
     @MessageMapping("chat/send")
     public void handleChatMessage(ChatMessageRequest request) {
 

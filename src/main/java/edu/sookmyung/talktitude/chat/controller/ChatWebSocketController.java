@@ -139,7 +139,7 @@ public class ChatWebSocketController {
             log.info("2차 분류 결과: {}", secondResult);
 
             // 공손하지만 부정적 감정이 있는 경우 2차 변환
-            if (secondResult.hasNegativeEmotions()) {
+            if (!"polite".equals(secondResult.finalJudgment) && secondResult.hasNegativeEmotions()) {
                 log.info("공손하지만 부정적 감정 감지 - 2차 공손화 변환 수행");
                 String finalText = convertToPolite(currentText, sessionId);
                 if (finalText != null) {

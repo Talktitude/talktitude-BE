@@ -134,14 +134,14 @@ public class ChatWebSocketController {
 
             // 2단계: 변환된 텍스트(또는 원문)를 다시 분류하여 부정적 감정 체크
             PolitenessClassificationService.FilteredMultiHeadResult secondResult =
-                    politenessClassificationService.classify(currentText);
+                    politenessClassificationService.classify(originalText);
 
             log.info("2차 분류 결과: {}", secondResult);
 
             // 공손하지만 부정적 감정이 있는 경우 2차 변환
-            if ("polite".equals(secondResult.finalJudgment) || "borderline".equals(secondResult.finalJudgment)   && secondResult.hasNegativeEmotions()) {
+            if (("polite".equals(secondResult.finalJudgment) || "borderline".equals(secondResult.finalJudgment) )  && secondResult.hasNegativeEmotions()) {
                 log.info("공손하지만 부정적 감정 감지 - 2차 공손화 변환 수행");
-                String finalText = convertToPolite(currentText, sessionId);
+                String finalText = convertToPolite(originalText, sessionId);
                 if (finalText != null) {
                     currentText = finalText;
                 }

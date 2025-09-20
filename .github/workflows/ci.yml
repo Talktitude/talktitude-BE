@@ -30,7 +30,6 @@ jobs:
           ./gradlew clean
           rm -rf build/
           ./gradlew build -x test --no-build-cache --recompile-groovy
-      
 
       - name: 빌드 결과 확인
         run: |
@@ -40,6 +39,13 @@ jobs:
           jar -tf ./build/libs/*SNAPSHOT.jar | grep ChatWebSocketController
           echo "=== 빌드 시간 확인 ==="
           stat ./build/libs/*SNAPSHOT.jar    
+
+      - name: 소스 파일 확인
+        run: |
+          echo "=== ChatWebSocketController 파일 존재 확인 ==="
+          find . -name "ChatWebSocketController.java" -type f
+          echo "=== 파일 내용 일부 확인 ==="
+          head -20 $(find . -name "ChatWebSocketController.java")
 
       - name: 빌드된 파일 이름 변경하기
         run: mv ./build/libs/*SNAPSHOT.jar ./talktitude.jar

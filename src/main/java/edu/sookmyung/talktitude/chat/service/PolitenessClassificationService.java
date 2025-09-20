@@ -271,10 +271,10 @@ public class PolitenessClassificationService {
         if ("impolite".equals(politeness.label)) {
             finalJudgment = "impolite";
             reason = "명시적 불공손";
-        } else if (negativeScore > 1.5f) {
+        } else if (negativeScore > 1.0f) {
             finalJudgment = "impolite";
             reason = "암시적 불공손 (" + String.join(", ", detectedNegative) + ")";
-        } else if (negativeScore > 0.8f) {
+        } else if (negativeScore > 0.6f) {
             finalJudgment = "borderline";
             reason = "경계선 (" + String.join(", ", detectedNegative) + ")";
         } else {
@@ -334,8 +334,10 @@ public class PolitenessClassificationService {
         }
 
         public boolean hasNegativeEmotions() {
-            log.info("emotions"+ emotions);
-            return emotions.stream().anyMatch(e -> negativeEmotions.contains(e.label));
+            long negativeCount = emotions.stream()
+                    .filter(e -> negativeEmotions.contains(e.label))
+                    .count();
+            return negativeCount >= 2;
         }
 
         public boolean isImpolite() {

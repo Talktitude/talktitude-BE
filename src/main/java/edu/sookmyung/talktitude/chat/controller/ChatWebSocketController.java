@@ -129,6 +129,9 @@ public class ChatWebSocketController {
                 if (currentText == null) {
                     currentText = originalText; // 변환 실패시 원문 사용
                 }
+
+                log.info("1차 변환 결과: {}", currentText);
+
                 return currentText;
             }
 
@@ -137,6 +140,12 @@ public class ChatWebSocketController {
                     politenessClassificationService.classify(currentText);
 
             log.info("2차 분류 결과: {}", secondResult);
+
+            log.info("finalJudgment: {}", secondResult.finalJudgment);
+            log.info("hasNegativeEmotions: {}", secondResult.hasNegativeEmotions());
+            log.info("조건 체크: !polite={}, hasNegative={}",
+                    !"polite".equals(secondResult.finalJudgment),
+                    secondResult.hasNegativeEmotions());
 
             // 공손하지만 부정적 감정이 있는 경우 2차 변환
             if (!"polite".equals(secondResult.finalJudgment) && secondResult.hasNegativeEmotions()) {

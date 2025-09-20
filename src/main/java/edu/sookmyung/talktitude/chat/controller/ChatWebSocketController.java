@@ -167,15 +167,7 @@ public class ChatWebSocketController {
             String result = generatePoliteMessage(originalMessage,context);
             JsonNode jsonNode = objectMapper.readTree(result);
 
-            String label = jsonNode.path("label").asText();
-
-            if ("impolite".equalsIgnoreCase(label)) {
-                // 무례한 메시지인 경우 공손한 버전 반환
-                return jsonNode.path("message").asText();
-            } else {
-                // 이미 공손한 메시지인 경우 원문 그대로 반환 (null이면 원문 사용)
-                return null;
-            }
+            return jsonNode.path("message").asText();
 
         }catch(Exception e){
             log.error("공손화 처리 중 오류 발생: {}", e.getMessage(), e);

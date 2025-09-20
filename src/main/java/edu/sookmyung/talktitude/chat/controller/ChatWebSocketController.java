@@ -37,15 +37,6 @@ public class ChatWebSocketController {
     private final ObjectMapper objectMapper;
     private final PolitenessClassificationService politenessClassificationService;
 
-
-    @PostConstruct
-    public void init() {
-        //완전히 눈에 띄게 설정
-        log.info("\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4D\uD83D\uDC4DInit ChatWebSocketController");
-        log.info("🚀🚀🚀 NEW CODE DEPLOYED! 새 코드 배포됨! 🚀🚀🚀");
-        log.info("🔥 ChatWebSocketController 초기화 완료 ");
-        log.info("=".repeat(80));
-    }
     @MessageMapping("chat/send")
     public void handleChatMessage(ChatMessageRequest request) {
 
@@ -149,19 +140,6 @@ public class ChatWebSocketController {
             // 2단계: 변환된 텍스트(또는 원문)를 다시 분류하여 부정적 감정 체크
             PolitenessClassificationService.FilteredMultiHeadResult secondResult =
                     politenessClassificationService.classify(currentText);
-
-            log.info("2차 분류 결과: {}", secondResult);
-            log.info("secondResult.text: {}", secondResult.text);
-            log.info("secondResult.finalJudgment: {}", secondResult.finalJudgment);
-            log.info("secondResult.reason: {}", secondResult.reason);
-            log.info("secondResult.emotions size: {}", secondResult.emotions.size());
-
-            log.info("finalJudgment: '{}' (길이: {}), !\"polite\".equals(): {}",
-                    secondResult.finalJudgment,
-                    secondResult.finalJudgment != null ? secondResult.finalJudgment.length() : "null",
-                    !"polite".equals(secondResult.finalJudgment));
-
-
 
             // 공손하지만 부정적 감정이 있는 경우 2차 변환
             if (!"polite".equals(secondResult.finalJudgment) && secondResult.hasNegativeEmotions()) {

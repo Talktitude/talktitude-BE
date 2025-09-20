@@ -57,6 +57,11 @@ public enum ErrorCode {
     //Spring MVC 관련
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "INVALID_REQUEST","요청 형식이 잘못되었습니다."),
 
+    // AI 관련
+    INIT_FAILED(HttpStatus.SERVICE_UNAVAILABLE,"INIT_FAILED","모델 초기화에 실패했습니다"),
+    S3_DOWNLOAD_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "S3_DOWNLOAD_FAILED","S3 다운로드 실패"),
+
+
     //최종 안전망
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR","예상치 못한 오류입니다");
 

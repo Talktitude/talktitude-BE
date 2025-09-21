@@ -90,7 +90,7 @@ public class GPTProperties {
                 **Response format:**
                 {
                     "category": "one of the 9 exact values above",
-                    "summary": "고객 문제: [핵심 이슈]. 상담원 대응: [주요 해결방안]. 처리 결과: [최종 상태]. (각 섹션 사이는 한 칸 띄어쓰기로 구분하여 가독성 높게 작성)"
+                    "summary": "summary in Korean"
                 }
                 
                 Customer service conversation:""";

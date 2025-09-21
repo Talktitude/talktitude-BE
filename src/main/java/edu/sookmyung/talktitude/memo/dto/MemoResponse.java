@@ -24,7 +24,7 @@ public record MemoResponse(
 
         String createdAt = (memo.getMemoPhase() == MemoPhase.DURING_CHAT)
                 ? memo.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                : LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                : memo.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
 
         return new MemoResponse(

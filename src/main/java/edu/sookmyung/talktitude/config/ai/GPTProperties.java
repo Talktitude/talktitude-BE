@@ -78,14 +78,23 @@ public class GPTProperties {
                 - Safety, security concerns → "안전거래"
                 - Anything else → "기타"
                 
+                
+                **Summary Guidelines:**
+                  - 고객의 핵심 문제나 요청사항을 명확히 기술
+                  - 상담원의 주요 해결방안이나 답변 내용 포함
+                  - 최종 처리 결과나 상태 명시 (해결완료/진행중/추가조치필요 등)
+                  - 2-3문장으로 간결하게 작성
+                  - 고객과 상담원의 핵심 대화 내용만 포함
+                  - 불필요한 인사말이나 반복적인 내용은 제외
+
                 **Response format:**
                 {
                     "category": "one of the 9 exact values above",
-                    "summary": "brief summary in Korean"
+                    "summary": "고객 문제: [핵심 이슈]. 상담원 대응: [주요 해결방안]. 처리 결과: [최종 상태]. (각 섹션 사이는 한 칸 띄어쓰기로 구분하여 가독성 높게 작성)"
                 }
                 
                 Customer service conversation:""";
-        private String model="gpt-3.5-turbo";
+        private String model="gpt-4";
         private double temperature=0.3; //모델의 창의성과 무작위성을 조절 -> 0.3으로 예상 가능하고 일관된 답변 유도.
         private int maxTokens=1000;
     }

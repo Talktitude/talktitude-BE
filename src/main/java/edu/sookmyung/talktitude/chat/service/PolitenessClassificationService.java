@@ -39,7 +39,7 @@ public class PolitenessClassificationService {
     private static final float EMOTION_THRESHOLD = 0.3f;
 
     // S3에서 다운로드할 파일들
-    private static final String MODEL_FILE = "multihead_filtered_model_reduce.onnx"; //ONNX로 변환한 실제 AI 모델
+    private static final String MODEL_FILE = "classifier_structure.onnx"; //ONNX로 변환한 실제 AI 모델
     private static final String TOKENIZER_FILE = "tokenizer_reduce.json"; //텍스트를 토큰으로 변환하는 규칙이 담긴 json
 
     @Value("${aws.access-key}")
@@ -74,6 +74,9 @@ public class PolitenessClassificationService {
         map.put(12, "한심함");
         map.put(13, "화남/분노");
         map.put(14, "환영/호의");
+        map.put(15,"증오/혐오");
+        map.put(16,"불안/걱정");
+        map.put(17,"안타까움/실망");
         return Collections.unmodifiableMap(map); // 수정 불가능 -> 뷰 개념
     }
 
@@ -84,7 +87,7 @@ public class PolitenessClassificationService {
 
     private static final Set<String> negativeEmotions = Set.of(
             "짜증", "화남/분노", "어이없음", "불평/불만",
-            "우쭐댐/무시함", "의심/불신", "한심함"
+            "우쭐댐/무시함", "의심/불신", "한심함","증오/혐오"
     );
 
     @PostConstruct

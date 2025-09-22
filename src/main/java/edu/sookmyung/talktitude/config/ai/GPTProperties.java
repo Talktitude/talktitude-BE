@@ -54,48 +54,40 @@ public class GPTProperties {
     @Data
     public static class SummaryConfig{
         private String summaryPrompt = """
-                Analyze the following customer service conversation and respond in JSON format.
+               다음 고객상담 대화를 분석하여 JSON 형식으로 응답해주세요.
                 
-                **IMPORTANT: The "category" field must be EXACTLY one of these 9 values:**
+                **중요: "category" 필드는 반드시 아래 9개 값 중 하나여야 합니다:**
                 - 주문
                 - 결제
-                - 배달
+                - 배송
                 - 리뷰
                 - 회원
                 - 쿠폰
-                - 서비스이용
-                - 안전거래
+                - 서비스 이용
+                - 안전 거래
                 - 기타
                 
-                **Category Guidelines:**
-                - Order issues, cancellations, refunds → "주문"
-                - Payment problems → "결제"
-                - Delivery issues → "배달"
-                - Reviews, ratings → "리뷰"
-                - Account/membership → "회원"
-                - Coupons, promotions → "쿠폰"
-                - Service usage questions → "서비스이용"
-                - Safety, security concerns → "안전거래"
-                - Anything else → "기타"
+                **카테고리 분류 기준:**
+                - 주문 관련 문의, 취소, 환불 → "주문"
+                - 결제 오류, 결제 수단 문제 → "결제"
+                - 배송 지연, 배송지 변경, 배송 문제 → "배송"
+                - 리뷰 작성, 평점, 후기 관련 → "리뷰"
+                - 계정 문제, 회원가입, 로그인 → "회원"
+                - 쿠폰 사용, 할인 혜택, 프로모션 → "쿠폰"
+                - 앱/웹 사용법, 기능 문의 → "서비스 이용"
+                - 보안, 사기 방지, 안전 관련 → "안전 거래"
+                - 위에 해당하지 않는 모든 문의 → "기타"
                 
+                요약: 고객 문제+상담원 해결 방안+처리 상태를 2문장으로 작성
                 
-                **Summary Guidelines:**
-                  - 고객의 핵심 문제나 요청사항을 명확히 기술
-                  - 상담원의 주요 해결방안이나 답변 내용 포함
-                  - 최종 처리 결과나 상태 명시 (해결완료/진행중/추가조치필요 등)
-                  - 2-3문장으로 간결하게 작성
-                  - 고객과 상담원의 핵심 대화 내용만 포함
-                  - 불필요한 인사말이나 반복적인 내용은 제외
+               답 형식: {"category":"카테고리","summary":"요약"}
+                
+               대화 내용:
+                """;
+        private String model="gpt-3.5-turbo";
+        private double temperature=0.1; //모델의 창의성과 무작위성을 조절 -> 0.3으로 예상 가능하고 일관된 답변 유도.
+        private int maxTokens=400;
 
-                **Response format:**
-                {
-                    "category": "one of the 9 exact values above",
-                    "summary": "summary in Korean"
-                }
-                
-                Customer service conversation:""";
-        private String model="gpt-4";
-        private double temperature=0.3; //모델의 창의성과 무작위성을 조절 -> 0.3으로 예상 가능하고 일관된 답변 유도.
-        private int maxTokens=1000;
+        private boolean streamResponse = false;
     }
 }

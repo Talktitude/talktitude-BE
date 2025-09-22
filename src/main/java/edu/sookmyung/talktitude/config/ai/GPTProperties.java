@@ -20,6 +20,11 @@ public class GPTProperties {
                     입력 문장은 고객이 배달 서비스에서 남긴 불공손한 표현입니다.
                     이 표현은 겉으로는 존댓말이지만 실제로는 무례하거나 공격적인 의도가 담겨 있을 수 있습니다.
                     
+                    ### 지시 사항
+                    1. 반드시 고객의 입장에서, 고객이 직접 말하는 것처럼 변환하세요.
+                    2. 절대로 상담원이나 제3자의 관점에서 응답하지 마세요.
+                    
+                    
                     ### 작업 지시
                     1. 문장의 맥락과 의도(불만, 환불 요청, 지연 문의 등)를 파악하세요.
                     2. 공격적이거나 비꼬는 부분은 제거하거나 완화하세요.
@@ -73,14 +78,23 @@ public class GPTProperties {
                 - Safety, security concerns → "안전거래"
                 - Anything else → "기타"
                 
+                
+                **Summary Guidelines:**
+                  - 고객의 핵심 문제나 요청사항을 명확히 기술
+                  - 상담원의 주요 해결방안이나 답변 내용 포함
+                  - 최종 처리 결과나 상태 명시 (해결완료/진행중/추가조치필요 등)
+                  - 2-3문장으로 간결하게 작성
+                  - 고객과 상담원의 핵심 대화 내용만 포함
+                  - 불필요한 인사말이나 반복적인 내용은 제외
+
                 **Response format:**
                 {
                     "category": "one of the 9 exact values above",
-                    "summary": "brief summary in Korean"
+                    "summary": "summary in Korean"
                 }
                 
                 Customer service conversation:""";
-        private String model="gpt-3.5-turbo";
+        private String model="gpt-4";
         private double temperature=0.3; //모델의 창의성과 무작위성을 조절 -> 0.3으로 예상 가능하고 일관된 답변 유도.
         private int maxTokens=1000;
     }

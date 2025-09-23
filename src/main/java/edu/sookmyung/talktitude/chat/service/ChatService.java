@@ -407,7 +407,7 @@ public class ChatService {
 
         // 3. 가게/주문 요약/총액
         String storeName = null;
-        String storeImageUrl = null;
+        String storeImageUrl = "https://talktitude-images.s3.ap-northeast-2.amazonaws.com/restaurant/not_order.png";
         String orderSummary = "주문 외 문의";
 
         if (cs.getOrder() != null) {

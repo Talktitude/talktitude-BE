@@ -274,10 +274,10 @@ public class PolitenessClassificationService {
         if ("impolite".equals(politeness.label)) {
             finalJudgment = "impolite";
             reason = "명시적 불공손";
-        } else if (negativeScore > 1.5f) {
+        } else if (negativeScore > 1.2f) {
             finalJudgment = "impolite";
             reason = "암시적 불공손 (" + String.join(", ", detectedNegative) + ")";
-        } else if (negativeScore > 0.8f) {
+        } else if (negativeScore > 0.9f) {
             finalJudgment = "borderline";
             reason = "경계선 (" + String.join(", ", detectedNegative) + ")";
         } else {

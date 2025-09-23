@@ -1,7 +1,7 @@
-package edu.sookmyung.talktitude.rag.search;
+package edu.sookmyung.talktitude.chat.rag.search;
 
 import com.pgvector.PGvector;
-import edu.sookmyung.talktitude.rag.ai.EmbeddingService;
+import edu.sookmyung.talktitude.chat.rag.ai.EmbeddingService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
+// 쿼리 텍스트 임베딩 -> pgvector 유사도 검색 SQL 실행
 public class PgRetriever {
     private final JdbcTemplate jdbc;
     private final EmbeddingService embeddings;

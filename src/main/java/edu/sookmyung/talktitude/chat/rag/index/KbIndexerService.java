@@ -1,20 +1,18 @@
-package edu.sookmyung.talktitude.rag.index;
+package edu.sookmyung.talktitude.chat.rag.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.sookmyung.talktitude.rag.ai.EmbeddingService;
-import edu.sookmyung.talktitude.rag.model.KbDoc;
+import edu.sookmyung.talktitude.chat.rag.ai.EmbeddingService;
+import edu.sookmyung.talktitude.chat.rag.model.KbDoc;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import com.pgvector.PGvector;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class KbIndexerService {

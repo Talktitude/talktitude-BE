@@ -1,4 +1,4 @@
-package edu.sookmyung.talktitude.rag.config;
+package edu.sookmyung.talktitude.chat.rag.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;

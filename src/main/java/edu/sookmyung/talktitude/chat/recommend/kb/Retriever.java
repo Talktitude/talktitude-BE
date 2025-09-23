@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+// 간단한 매칭 기반 키워드 스코어링으로 상위 k 문서 선별
 public class Retriever {
 
     private final KnowledgeBase kb;

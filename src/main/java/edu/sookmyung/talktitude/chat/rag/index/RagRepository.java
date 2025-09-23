@@ -1,4 +1,4 @@
-package edu.sookmyung.talktitude.rag.index;
+package edu.sookmyung.talktitude.chat.rag.index;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;

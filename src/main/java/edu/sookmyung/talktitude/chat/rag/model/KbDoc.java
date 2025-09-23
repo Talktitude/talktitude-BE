@@ -1,4 +1,4 @@
-package edu.sookmyung.talktitude.rag.model;
+package edu.sookmyung.talktitude.chat.rag.model;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package edu.sookmyung.talktitude.rag.config;
+package edu.sookmyung.talktitude.chat.rag.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 public class RagProperties {
     private boolean enabled = false;
     private int topk = 4;
-    private int n = 4; // 추천 개수 (참고용)
+    private int n = 3; // 추천 개수 (참고용)
     private int bizDays = 3; // 영업일 표기 (참고용)
 
 

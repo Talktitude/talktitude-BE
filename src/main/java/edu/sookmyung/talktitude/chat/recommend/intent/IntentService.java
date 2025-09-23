@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+// 룰 기반 의도 분류
 public class IntentService {
 
     private final Map<String, List<String>> rules = Map.of(

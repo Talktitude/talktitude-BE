@@ -22,6 +22,7 @@ import java.time.Duration;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+// OpenAI API 호출
 public class GptClient {
 
     private final ObjectMapper om = new ObjectMapper();

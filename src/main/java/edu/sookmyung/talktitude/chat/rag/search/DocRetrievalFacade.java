@@ -1,14 +1,20 @@
-package edu.sookmyung.talktitude.rag.search;
+package edu.sookmyung.talktitude.chat.rag.search;
 
 import edu.sookmyung.talktitude.chat.recommend.kb.KnowledgeBase;
 import edu.sookmyung.talktitude.chat.recommend.kb.Retriever; // 기존 키워드형
-import edu.sookmyung.talktitude.rag.config.RagProperties;
+import edu.sookmyung.talktitude.chat.rag.config.RagProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * text/intent/topK를 받아 적절한 경로로 KB 문서를 가져온다.
+ * RAG 토글이 꺼져 있으면(rag.enabled=false) 기존 키워드 로직 사용
+ */
+@Slf4j
 @Component
 public class DocRetrievalFacade {
     private final RagProperties props;
@@ -22,15 +28,12 @@ public class DocRetrievalFacade {
         this.pgRetriever = pgRetriever;
     }
 
-
-    /**
-     * text/intent/topK를 받아 적절한 경로로 KB 문서를 가져온다.
-     * RAG 토글이 꺼져 있으면 기존 로직을 그대로 사용한다.
-     */
     public List<KnowledgeBase.Doc> retrieve(String text, String intent, int topK) {
         if (!props.isEnabled()) {
+            // rag.enabled=false -> 레거시 키워드 검색
             return legacyRetriever.retrieve(text, intent, topK);
         }
+        // rag.enabled=true -> 벡터 검색 (pgvector)
         var rows = pgRetriever.retrieve(text, intent, topK);
         List<KnowledgeBase.Doc> out = new ArrayList<>();
         for (var r : rows) {

@@ -1,4 +1,4 @@
-package edu.sookmyung.talktitude.rag.ai;
+package edu.sookmyung.talktitude.chat.rag.ai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+// 임베딩 생성
 public class EmbeddingService {
 
     private final GptClient gpt;

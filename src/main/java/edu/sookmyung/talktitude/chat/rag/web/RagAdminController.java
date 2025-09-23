@@ -1,7 +1,7 @@
-package edu.sookmyung.talktitude.rag.web;
+package edu.sookmyung.talktitude.chat.rag.web;
 
-import edu.sookmyung.talktitude.rag.index.KbIndexerService;
-import edu.sookmyung.talktitude.rag.search.PgRetriever;
+import edu.sookmyung.talktitude.chat.rag.index.KbIndexerService;
+import edu.sookmyung.talktitude.chat.rag.search.PgRetriever;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +21,8 @@ public class RagAdminController {
     @Value("${recommend.kb.path:classpath:kb/cs_kb.jsonl}")
     private String defaultKbPath;
 
-    /**
-     * 색인 실행 (경로 미지정 시 기본값 사용)
-     */
+    // 색인(reindex)용
+    // KB 내용이 바뀌었을 때 한 번 실행
     @PostMapping("/reindex")
     public Map<String, Object> reindex(@RequestParam(value = "path", required = false) String path) throws Exception {
         String p = (path == null || path.isBlank()) ? defaultKbPath : path;
@@ -31,9 +30,8 @@ public class RagAdminController {
         return Map.of("reindexed", n, "path", p);
     }
 
-    /**
-     * RAG 검색 검증용
-     */
+    // RAG 검색 검증용
+    //
     @GetMapping("/search")
     public List<PgRetriever.Row> search(
             @RequestParam String text,

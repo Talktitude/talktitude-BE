@@ -54,7 +54,7 @@ public class GPTProperties {
     @Data
     public static class SummaryConfig{
         private String summaryPrompt = """
-               다음 고객상담 대화를 분석하여 JSON 형식으로 응답해주세요.
+                다음 고객상담 대화를 간결하게 요약하여 JSON 형식으로 응답해주세요.
                 
                 **중요: "category" 필드는 반드시 아래 9개 값 중 하나여야 합니다:**
                 - 주문
@@ -79,19 +79,28 @@ public class GPTProperties {
                 - 위에 해당하지 않는 모든 문의 → "기타"
                 
                 **요약 작성 규칙:**
-               - 첫 번째 줄: 고객의 문제나 요청 사항
-               - 두 번째 줄: 상담원의 해결 방안이나 답변 내용 \s
-               - 세 번째 줄: 최종 처리 상태나 결과
-               - 각 줄은 \\n으로 구분하여 작성
+                - 대화 내용을 분석하여 핵심만 추출하세요.
+                - 2-3문장으로 간결하게 작성하되 문제와 해결방안을 포함하세요.
+                - 각 문장은 \\n으로 구분하여 작성하세요.
+                - 불필요한 세부사항이나 반복 내용은 제외하세요.
+                - 객관적이고 명확한 표현을 사용하세요.
                 
-               응답: {"category":"카테고리","summary":"첫번째 문장\\n두번째 문장\\n세번째 문장"}
+                **좋은 요약 예시:**
+                - "고객이 짜장면 주문 취소를 문의했습니다.\\n환불 절차 안내 후 3일 내 처리 예정으로 답변했습니다."
+                - "결제 오류 신고가 접수되었습니다.\\n카드사 확인 절차 안내 후 재결제 방법을 설명했습니다."
                 
-               대화 내용:
+                **피해야 할 요약 예시:**
+                - 대화 내용을 그대로 나열하는 것
+                - "죄송합니다", "감사합니다" 같은 인사말 포함
+                - 상담원의 구체적인 멘트 그대로 옮기기
+
+                응답 형식: {"category":"카테고리","summary":"핵심 요약 내용"}
+             
+                대화 내용:
                 """;
         private String model="gpt-3.5-turbo";
-        private double temperature=0.1; //모델의 창의성과 무작위성을 조절 -> 0.3으로 예상 가능하고 일관된 답변 유도.
-        private int maxTokens=400;
-
+        private double temperature=0.1;
+        private int maxTokens=300; // 2-3문장 요약을 위해 토큰 수 증가
         private boolean streamResponse = false;
     }
 }

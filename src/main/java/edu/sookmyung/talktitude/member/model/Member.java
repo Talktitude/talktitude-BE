@@ -27,6 +27,14 @@ public class Member extends BaseUser { //UserDetails를 상속받아 인증 객�
     public String getUserType() {
         return "Member";
     }
+
+    @Override
+    public void updateProfile(String name, String phone, String email) {
+        super.updateProfile(name, phone, null);
+        if (email != null && !email.isBlank()) {
+            this.email = email;
+        }
+    }
 }
 
 

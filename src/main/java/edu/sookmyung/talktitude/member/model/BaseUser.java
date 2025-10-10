@@ -43,6 +43,23 @@ public abstract class BaseUser implements UserDetails {
 
     public abstract String getUserType();
 
+    // 비밀번호 변경
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    // 이름, 전화번호, 이메일
+    public void updateProfile(String name, String phone, String email) {
+        if (name != null && !name.isBlank()) this.name = name;
+        if (phone != null && !phone.isBlank()) this.phone = phone;
+        // email은 Member에만 존재하므로 여기선 처리 X
+    }
+
+    // 프로필 이미지 변경
+    public void updateProfileImage(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
     //사용자의 id를 반환(고유한 값)
     @Override
     public String getUsername() {

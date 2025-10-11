@@ -6,9 +6,11 @@ import edu.sookmyung.talktitude.common.exception.ErrorCode;
 import edu.sookmyung.talktitude.config.jwt.TokenProvider;
 import edu.sookmyung.talktitude.member.model.BaseUser;
 import edu.sookmyung.talktitude.member.service.MemberService;
+import edu.sookmyung.talktitude.token.repository.RefreshTokenRepository;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -17,6 +19,7 @@ public class TokenService {
     private final TokenProvider tokenProvider;
     private final MemberService memberService;
     private final ClientService clientService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public String createNewAccessToken(String refreshToken) {
         try {
@@ -45,5 +48,12 @@ public class TokenService {
             case "Client"-> clientService.findClientById(userId);
             default -> throw new BaseException(ErrorCode.WRONG_USERTYPE);
         };
+    }
+
+    // 로그아웃 (사용자 ID & 타입으로 Refresh Token 삭제)
+    @Transactional
+    public void deleteRefreshToken(Long userId, String userType) {
+        refreshTokenRepository.findByUserIdAndUserType(userId,userType)
+                .ifPresent(refreshTokenRepository::delete);
     }
 }

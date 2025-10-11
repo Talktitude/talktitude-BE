@@ -30,6 +30,7 @@ public enum ErrorCode {
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_001", "사용자 정보를 찾을 수 없습니다."),
     DUPLICATE_LOGIN_ID(HttpStatus.CONFLICT, "MEMBER_002", "이미 존재하는 로그인 ID입니다."),
     INVALID_PASSWORD_CONFIRM(HttpStatus.BAD_REQUEST, "MEMBER_003", "비밀번호와 비밀번호 확인이 일치하지 않습니다."),
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "INVALID_PASSWORD", "현재 비밀번호가 일치하지 않습니다."),
     S3_UPLOAD_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "MEMBER_004", "이미지 업로드에 실패했습니다."),
     INVALID_PROFILE_UPDATE(HttpStatus.BAD_REQUEST, "MEMBER_005", "수정할 정보가 올바르지 않습니다."),
 

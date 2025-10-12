@@ -64,4 +64,13 @@ public class MyPageController {
         myPageService.updatePassword(member.getId(), req);
         return ResponseEntity.ok(ApiResponse.ok(null, "비밀번호 변경 완료"));
     }
+
+    // 상담원 탈퇴
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<Void>> withdraw(
+            @AuthenticationPrincipal Member member
+    ) {
+        myPageService.withdraw(member.getId());
+        return ResponseEntity.ok(ApiResponse.ok(null, "회원 탈퇴 완료"));
+    }
 }

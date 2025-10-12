@@ -3,7 +3,8 @@ package edu.sookmyung.talktitude.member.service;
 import edu.sookmyung.talktitude.common.exception.BaseException;
 import edu.sookmyung.talktitude.common.exception.ErrorCode;
 import edu.sookmyung.talktitude.common.service.S3Service;
-import edu.sookmyung.talktitude.member.dto.MemberUpdateRequest;
+import edu.sookmyung.talktitude.member.dto.PasswordUpdateRequest;
+import edu.sookmyung.talktitude.member.dto.ProfileUpdateRequest;
 import edu.sookmyung.talktitude.member.model.Member;
 import edu.sookmyung.talktitude.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,17 +22,15 @@ public class MyPageService {
     private final PasswordEncoder passwordEncoder;
     private final S3Service s3Service;
 
+    // 프로필 수정
     @Transactional
-    public void  updateMemberInfo(Long memberId, MemberUpdateRequest req) {
+    public void  updateProfile(Long memberId, ProfileUpdateRequest req) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
 
-        // 비밀번호 변경
-        if (req.getPassword() != null && !req.getPassword().isBlank()) {
-            if (req.getPasswordConfirm() == null || !req.getPassword().equals(req.getPasswordConfirm())) {
-                throw new BaseException(ErrorCode.INVALID_PASSWORD_CONFIRM);
-            }
-            member.updatePassword(passwordEncoder.encode(req.getPassword()));
+        // 현재 비밀번호 확인
+        if (req.getCurrentPassword() == null || !passwordEncoder.matches(req.getCurrentPassword(), member.getPassword())) {
+            throw new BaseException(ErrorCode.INVALID_PASSWORD);
         }
 
         // 이름, 전화번호, 이메일 업데이트
@@ -46,5 +45,24 @@ public class MyPageService {
                 throw new BaseException(ErrorCode.S3_UPLOAD_FAILED);
             }
         }
+    }
+
+    // 비밀번호 수정
+    @Transactional
+    public void updatePassword(Long memberId, PasswordUpdateRequest req) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
+
+        // 현재 비밀번호 검증
+        if (req.getCurrentPassword() == null || !passwordEncoder.matches(req.getCurrentPassword(), member.getPassword())) {
+            throw new BaseException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        // 새 비밀번호 확인 일치 검증
+        if (req.getNewPassword() == null || req.getConfirmPassword() == null || !req.getNewPassword().equals(req.getConfirmPassword())) {
+            throw new BaseException(ErrorCode.INVALID_PASSWORD_CONFIRM);
+        }
+
+        member.updatePassword(passwordEncoder.encode(req.getNewPassword()));
     }
 }

@@ -60,6 +60,11 @@ public abstract class BaseUser implements UserDetails {
         this.profileImageUrl = profileImageUrl;
     }
 
+    // 탈퇴
+    public void withdraw() {
+        this.isDeleted = true;
+    }
+
     //사용자의 id를 반환(고유한 값)
     @Override
     public String getUsername() {

@@ -10,11 +10,10 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MemberUpdateRequest {
+public class ProfileUpdateRequest {
     private String name;
     private String phone;
     private String email;
-    private String password;
-    private String passwordConfirm;
+    private String currentPassword;
     private MultipartFile profileImage;
 }

@@ -62,7 +62,7 @@ public class SecurityConfig {
                         // REVIEW /ws/info가 SockJS에서 자동으로 보내는 사전 확인용 요청이지만 성공하면 -> /ws.. 로 추가적인 요청이 이루어진다고 해서 /ws/**를 열어두었습니다(커스텀 헤더 설정 불가능) -> 혹시 아니라면 말씀해주세요
                         .requestMatchers("/ws/**").permitAll()
                         // 비인증 허용 API
-                        .requestMatchers("/members/**", "/clients/**", "/reports/run", "/logout").permitAll()
+                        .requestMatchers("/members/**", "/clients/**", "/reports/run", "/logout","/tokens").permitAll()
 
                         // 그 외는 인증 필요
                         .anyRequest().authenticated()

@@ -39,8 +39,7 @@ public class TokenController {
 
             String newAccessToken = tokenService.createNewAccessToken(request.getRefreshToken());
 
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(new CreateAccessTokenResponse(newAccessToken));
+            return ResponseEntity.ok(ApiResponse.ok(new CreateAccessTokenResponse(newAccessToken)));
 
     }
 

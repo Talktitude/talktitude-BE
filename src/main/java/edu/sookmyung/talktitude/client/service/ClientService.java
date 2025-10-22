@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -125,18 +126,33 @@ public class ClientService {
 
         Client client = validateAndGetClient(sessionId, member);
 
+
         //고객의 주문 내역을 전부 조회
-        List<Order> orders = orderRepository.findByClientLoginId(client.getLoginId());
+        List<Order> orders = orderRepository.findByClientLoginIdOrderByCreatedAtDesc(client.getLoginId()); // 최신순으로 정렬
+
+        //현재 주문 건 위로 올리기
+        ChatSession chatSession = chatSessionRepository.findById(sessionId).orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
+        final boolean isAboutOrder = (chatSession.getOrder() != null);
+
+        if(isAboutOrder) {
+            //현재 주문이 이미 리스트에 있으니 제거
+            orders.removeIf(order -> order.getId().equals(chatSession.getOrder().getId()));
+            //맨 앞에 추가
+            orders.add(0,chatSession.getOrder());
+        }
 
         // 배달 정보와 함께 orderInfo dto 구성
-        return orders.stream()
-                .map(order->{
+        return IntStream.range(0,orders.size())
+                .mapToObj(index->{
+                    Order order = orders.get(index);
                     OrderDelivery orderDelivery = order.getOrderDelivery();
 
                     if(orderDelivery==null){
                         throw new BaseException(ErrorCode.ORDER_DELIVERY_NOT_FOUND);
                     }
-                    return OrderInfo.convertToOrderInfo(order, orderDelivery);
+
+                    boolean isCurrentOrder = (index==0 && isAboutOrder);
+                    return OrderInfo.convertToOrderInfo(order, orderDelivery, isCurrentOrder);
                 }).collect(Collectors.toList());
     }
 
@@ -145,6 +161,7 @@ public class ClientService {
     @Transactional(readOnly = true)
     public OrderDetailInfo getOrderDetailById(String orderNumber, Member member, Long sessionId) {
 
+        boolean isCurrentOrder = false;
         Client client = validateAndGetClient(sessionId, member);
 
         //특정 주문 내역의 상세 주문 정보 조회
@@ -171,7 +188,13 @@ public class ClientService {
             throw new BaseException(ErrorCode.ORDER_MENU_NOT_FOUND);
         }
 
-        return OrderDetailInfo.convertToOrderDetailInfo(order, orderDelivery, orderPayment, orderMenus);
+        //해당 주문 상세 내역이 현재 세션의 상담 대상 주문 건인지 확인
+        ChatSession chatSession = chatSessionRepository.findById(sessionId).orElseThrow(() -> new BaseException(ErrorCode.CHATSESSION_NOT_FOUND));
+        if(chatSession.getOrder()!= null && chatSession.getOrder().getId().equals(order.getId())){
+            isCurrentOrder = true;
+        }
+
+        return OrderDetailInfo.convertToOrderDetailInfo(order, orderDelivery, orderPayment, orderMenus,isCurrentOrder);
     }
 
     // 오른쪽 정보 패널 -> 고객별 상담 목록 조회

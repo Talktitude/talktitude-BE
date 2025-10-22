@@ -67,7 +67,7 @@ public class ChatService {
                 agent,
                 persisted,
                 order,
-                LocalDateTime.now(),
+                DateTimeUtils.nowKst(),
                 Status.IN_PROGRESS // 기본값
         );
 
@@ -193,7 +193,33 @@ public class ChatService {
         }
 
         Client client = session.getClient();
-        return new ChatSessionDetailDto(session, client);
+
+        boolean orderRelated = false;
+        Long orderId = null;
+        String orderNumber = null;
+        String storeName = null;
+
+        if (session.getOrder() != null) {
+            Order order = session.getOrder();
+            orderRelated = true;
+            orderId = order.getId();
+            orderNumber = order.getOrderNumber();
+            storeName = order.getRestaurant().getName();
+        }
+
+        return new ChatSessionDetailDto(
+                session.getId(),
+                client.getLoginId(),
+                client.getName(),
+                client.getPhone(),
+                DateTimeUtils.toEpochMillis(session.getCreatedAt()),
+                session.getStatus().name(),
+                orderRelated,
+                orderId,
+                orderNumber,
+                storeName
+
+        );
     }
 
     // 상담 종료
@@ -257,7 +283,7 @@ public class ChatService {
                 senderType,
                 originalText,
                 convertedText,
-                LocalDateTime.now()
+                DateTimeUtils.nowKst()
         );
         return chatMessageRepository.save(message);
     }
@@ -286,7 +312,7 @@ public class ChatService {
     // 전체 주문 목록 조회
     @Transactional(readOnly = true)
     public List<OrderHistory> getOrderHistory(Client client) {
-        List<Order> orderList = orderRepository.findByClientLoginId(client.getLoginId());
+        List<Order> orderList = orderRepository.findByClientLoginIdOrderByCreatedAtDesc(client.getLoginId()); //최신순으로 정렬
         return orderList.stream()
                 .sorted(Comparator.comparing(Order::getCreatedAt).reversed())
                 .map(order -> {
@@ -333,11 +359,24 @@ public class ChatService {
         List<ChatSession> finishedEntities =
                 chatSessionRepository.findByClient_IdAndStatus(clientId, Status.FINISHED);
 
+        // 마지막 메시지 시각 계산 함수
+        java.util.function.Function<ChatSession, LocalDateTime> lastMessageOrCreated =
+                cs -> chatMessageRepository
+                        .findTopByChatSessionOrderByCreatedAtDesc(cs)
+                        .map(ChatMessage::getCreatedAt)
+                        .orElse(cs.getCreatedAt());
+
+        // 진행중: 마지막 메시지 최신순
         List<ClientChatSessionDto> inProgress = inProgEntities.stream()
+                .sorted(Comparator.comparing((ChatSession cs) -> lastMessageOrCreated.apply(cs))
+                        .reversed())
                 .map(this::toClientItem)
                 .toList();
 
+        // 종료: 마지막 메시지 최신순
         List<ClientChatSessionDto> finished = finishedEntities.stream()
+                .sorted(Comparator.comparing((ChatSession cs) -> lastMessageOrCreated.apply(cs))
+                        .reversed())
                 .map(this::toClientItem)
                 .toList();
 
@@ -359,9 +398,16 @@ public class ChatService {
                         : m.getOriginalText())
                 .orElse("대화가 시작되었습니다.");
 
-        // 2. 가게/주문 요약/총액
+        // 2. 마지막 메시지 시각(없으면 세션 생성 시각)
+        long lastMillis = chatMessageRepository
+                .findTopByChatSessionOrderByCreatedAtDesc(cs)
+                .map(ChatMessage::getCreatedAt)
+                .map(DateTimeUtils::toEpochMillis)
+                .orElse(DateTimeUtils.toEpochMillis(cs.getCreatedAt()));
+
+        // 3. 가게/주문 요약/총액
         String storeName = null;
-        String storeImageUrl = null;
+        String storeImageUrl = "https://talktitude-images.s3.ap-northeast-2.amazonaws.com/restaurant/not_order.png";
         String orderSummary = "주문 외 문의";
 
         if (cs.getOrder() != null) {
@@ -402,7 +448,8 @@ public class ChatService {
                 storeName,
                 storeImageUrl,
                 orderSummary,
-                lastMessage
+                lastMessage,
+                lastMillis
         );
     }
 
@@ -441,5 +488,58 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<ChatMessage> getRecentMessages(Long sessionId,int count){
         return chatMessageRepository.findRecentByChatSessionId(sessionId,count);
+    }
+
+    // 고객 목록 갱신 푸시용 DTO 생성
+    public ClientSessionUpdatedPush buildClientUpdatedPush(ChatSession cs) {
+        // 1. 마지막 메시지 시간 & 고객 화면에 보여질 lastMessage
+        var lastMsgOpt = chatMessageRepository.findTopByChatSessionOrderByCreatedAtDesc(cs);
+        long lastMillis = DateTimeUtils.toEpochMillis(
+                lastMsgOpt.map(ChatMessage::getCreatedAt).orElse(cs.getCreatedAt())
+        );
+
+        String lastMessage = lastMsgOpt
+                .map(m -> (m.getSenderType() == SenderType.CLIENT)
+                        ? (m.getConvertedText() != null ? m.getConvertedText() : m.getOriginalText())
+                        : m.getOriginalText())
+                .orElse("대화가 시작되었습니다.");
+
+        // 2. 주문 요약
+        String storeName = null;
+        String storeImageUrl = null;
+        String orderSummary = "주문 외 문의";
+
+        if (cs.getOrder() != null) {
+            Order order = cs.getOrder();
+            var r = order.getRestaurant();
+
+            // 메뉴 요약
+            List<OrderMenu> menus = orderMenuRepository.findByOrderId(order.getId());
+            String summaryCore;
+            if (menus != null && !menus.isEmpty()) {
+                String first = menus.get(0).getMenu();
+                int others = Math.max(0, menus.size() - 1);
+                summaryCore = (others > 0) ? first + " 외 " + others + "개" : first;
+            } else {
+                summaryCore = "주문 외 문의";
+            }
+
+            // 결제 금액
+            Integer paidAmount = orderPaymentRepository.findPaidAmountByOrderId(order.getId()).orElse(null);
+            orderSummary = (paidAmount != null)
+                    ? summaryCore + " " + String.format("%,d원", paidAmount)
+                    : summaryCore;
+        }
+
+        return ClientSessionUpdatedPush.builder()
+                .sessionId(cs.getId())
+                .status(cs.getStatus().name())
+                .storeName(storeName)
+                .storeImageUrl(storeImageUrl)
+                .orderSummary(orderSummary)
+                .lastMessage(lastMessage)
+                .lastMessageTime(lastMillis)
+                .build();
+
     }
 }

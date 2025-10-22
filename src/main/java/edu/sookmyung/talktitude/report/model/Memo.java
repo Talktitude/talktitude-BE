@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -35,12 +37,15 @@ public class Memo {
     @Column(name="is_deleted",nullable=false)
     private boolean isDeleted=false;
 
+    //빌더 패턴 사용 시 필드 초기화 무시 방지용
     @Column(name="created_at")
-    private LocalDateTime createdAt= LocalDateTime.now();
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
     //memo update 기능을 위해 명시.
+    @Builder.Default
     @Column(name="updated_at")
-    private LocalDateTime updatedAt =  LocalDateTime.now();
+    private LocalDateTime updatedAt =  LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
     @Enumerated(EnumType.STRING)
     @Column(name="memo_phase",nullable=false)
@@ -48,7 +53,7 @@ public class Memo {
 
     public void updateMemo(String newMemoText) {
        this.memoText = newMemoText;
-       this.updatedAt = LocalDateTime.now();
+       this.updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
 }

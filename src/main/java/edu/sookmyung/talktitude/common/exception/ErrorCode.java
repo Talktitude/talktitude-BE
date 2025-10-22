@@ -29,6 +29,11 @@ public enum ErrorCode {
     //Member 관련
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_001", "사용자 정보를 찾을 수 없습니다."),
     DUPLICATE_LOGIN_ID(HttpStatus.CONFLICT, "MEMBER_002", "이미 존재하는 로그인 ID입니다."),
+    INVALID_PASSWORD_CONFIRM(HttpStatus.BAD_REQUEST, "MEMBER_003", "새 비밀번호와 비밀번호 확인이 일치하지 않습니다."),
+    S3_UPLOAD_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "MEMBER_004", "이미지 업로드에 실패했습니다."),
+    INVALID_PROFILE_UPDATE(HttpStatus.BAD_REQUEST, "MEMBER_005", "수정할 정보가 올바르지 않습니다."),
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER_006", "현재 비밀번호가 일치하지 않습니다."),
+    ALREADY_DELETED_MEMBER(HttpStatus.BAD_REQUEST, "MEMBER_007", "이미 탈퇴한 회원입니다."),
 
     //ChatSession 관련
     CHATSESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATSESSION_001", "세션 정보를 찾을 수 없습니다."),
@@ -56,6 +61,11 @@ public enum ErrorCode {
 
     //Spring MVC 관련
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "INVALID_REQUEST","요청 형식이 잘못되었습니다."),
+
+    // AI 관련
+    INIT_FAILED(HttpStatus.SERVICE_UNAVAILABLE,"INIT_FAILED","모델 초기화에 실패했습니다"),
+    S3_DOWNLOAD_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "S3_DOWNLOAD_FAILED","S3 다운로드 실패"),
+
 
     //최종 안전망
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR","예상치 못한 오류입니다");

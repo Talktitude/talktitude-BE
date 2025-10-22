@@ -4,13 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.sookmyung.talktitude.chat.dto.ChatMessageRequest;
 import edu.sookmyung.talktitude.chat.dto.ChatMessageResponse;
+import edu.sookmyung.talktitude.chat.dto.ClientSessionUpdatedPush;
 import edu.sookmyung.talktitude.chat.dto.SessionUpdatedPush;
 import edu.sookmyung.talktitude.chat.model.ChatMessage;
 import edu.sookmyung.talktitude.chat.model.SenderType;
 import edu.sookmyung.talktitude.chat.service.ChatService;
+import edu.sookmyung.talktitude.chat.service.PolitenessClassificationService;
 import edu.sookmyung.talktitude.chat.service.RecommendService;
 import edu.sookmyung.talktitude.common.util.DateTimeUtils;
 import edu.sookmyung.talktitude.config.ai.GPTProperties;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -32,6 +35,7 @@ public class ChatWebSocketController {
     private final ChatClient chatClient;
     private final GPTProperties gptProperties;
     private final ObjectMapper objectMapper;
+    private final PolitenessClassificationService politenessClassificationService;
 
     @MessageMapping("chat/send")
     public void handleChatMessage(ChatMessageRequest request) {
@@ -39,7 +43,7 @@ public class ChatWebSocketController {
         // 1. 고객 메시지만 공손화 변환
         String convertedText = null;
         if (request.getSenderType() == SenderType.CLIENT) {
-            convertedText = convertToPolite(request.getOriginalText(), request.getSessionId());
+            convertedText = processMessagePoliteness(request.getOriginalText(), request.getSessionId());
         }
 
         // 2. 메시지 저장
@@ -57,24 +61,10 @@ public class ChatWebSocketController {
 
         // 3. 수신자별 표시 형태 구성
         // 상담원: 공손문(있으면) 표시, 원문보기 버튼 O
-        ChatMessageResponse forAgent = new ChatMessageResponse(
-                message.getId(),
-                (message.getConvertedText() != null) ? message.getConvertedText() : message.getOriginalText(),
-                message.getOriginalText(),
-                (message.getConvertedText() != null),
-                message.getSenderType().name(),
-                createdAtMs
-        );
+        ChatMessageResponse forAgent  = new ChatMessageResponse(message, "MEMBER");
 
         // 고객: 항상 원문, 원문보기 버튼 X
-        ChatMessageResponse forClient = new ChatMessageResponse(
-                message.getId(),
-                message.getOriginalText(),
-                message.getOriginalText(),
-                false,
-                message.getSenderType().name(),
-                createdAtMs
-        );
+        ChatMessageResponse forClient = new ChatMessageResponse(message, "CLIENT");
 
         // 4. 채팅 메시지 푸시(사용자 큐로 전송)
         messagingTemplate.convertAndSendToUser(agentLoginId,  "/queue/chat/" + sessionId, forAgent);
@@ -95,7 +85,7 @@ public class ChatWebSocketController {
             recommendService.generateAndPush(message.getId());
         }
 
-        // 6. 상담 목록 업데이트 푸시 (목록 최상단 정렬용)
+        // 6. 상담원 - 상담 목록 업데이트 푸시 (목록 최상단 정렬용)
         var cs = message.getChatSession();
         var listPush = SessionUpdatedPush.builder()
                 .sessionId(cs.getId())
@@ -112,7 +102,63 @@ public class ChatWebSocketController {
                 "/queue/sessions/updated",
                 listPush
         );
+
+        // 고객 - 상담 목록 업데이트 푸시
+        ClientSessionUpdatedPush clientListPush = chatService.buildClientUpdatedPush(cs);
+        messagingTemplate.convertAndSendToUser(
+                clientLoginId,
+                "/queue/client/sessions/updated",
+                clientListPush
+        );
     }
+
+    //공손화 처리 로직
+    private String processMessagePoliteness(String originalText, Long sessionId) {
+        try{
+            log.info("공손 판별 시작");
+
+            PolitenessClassificationService.FilteredMultiHeadResult classificationResult =
+                    politenessClassificationService.classify(originalText);
+
+            log.info("classification result: {}", classificationResult);
+
+            String currentText = originalText;
+            // 비공손한 경우 1차 변환
+            if (classificationResult.isImpolite()) {
+                log.info("비공손 메시지로 판별 - 1차 공손화 변환 수행");
+                currentText = convertToPolite(currentText, sessionId);
+
+                if (currentText == null) {
+                    currentText = originalText; // 변환 실패시 원문 사용
+                }
+
+                log.info("1차 변환 결과: {}", currentText);
+
+                return currentText;
+            }
+
+            // 2단계: 변환된 텍스트(또는 원문)를 다시 분류하여 부정적 감정 체크
+            PolitenessClassificationService.FilteredMultiHeadResult secondResult =
+                    politenessClassificationService.classify(currentText);
+
+            // 공손하지만 부정적 감정이 있는 경우 2차 변환
+            if (!"polite".equals(secondResult.finalJudgment) && secondResult.hasNegativeEmotions()) {
+                log.info("공손하지만 부정적 감정 감지 - 2차 공손화 변환 수행");
+                String finalText = convertToPolite(currentText, sessionId);
+                if (finalText != null) {
+                    currentText = finalText;
+                }
+                log.info("2차 변환 결과: {}", currentText);
+            }
+            // 원문과 같으면 null 반환 (변환 없음을 의미)
+            return currentText.equals(originalText) ? null : currentText;
+
+        } catch (Exception e) {
+            log.error("공손화 처리 중 오류 발생: {}", e.getMessage(), e);
+            return null; // 오류 발생 시 원문 사용
+        }
+    }
+
 
     //공손 변환 로직
     public String convertToPolite(String originalMessage, Long sessionId){
@@ -123,15 +169,7 @@ public class ChatWebSocketController {
             String result = generatePoliteMessage(originalMessage,context);
             JsonNode jsonNode = objectMapper.readTree(result);
 
-            String label = jsonNode.path("label").asText();
-
-            if ("impolite".equalsIgnoreCase(label)) {
-                // 무례한 메시지인 경우 공손한 버전 반환
-                return jsonNode.path("message").asText();
-            } else {
-                // 이미 공손한 메시지인 경우 원문 그대로 반환 (null이면 원문 사용)
-                return null;
-            }
+            return jsonNode.path("message").asText();
 
         }catch(Exception e){
             log.error("공손화 처리 중 오류 발생: {}", e.getMessage(), e);

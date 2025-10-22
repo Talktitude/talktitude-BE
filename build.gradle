@@ -81,6 +81,19 @@ dependencies {
 	// Spring AI (임베딩 전용)
 	// implementation platform("org.springframework.ai:spring-ai-bom:1.0.0")
 	// implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+
+	// S3
+	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.767'
+
+	// ONNX Runtime
+	implementation 'com.microsoft.onnxruntime:onnxruntime:1.16.3'
+
+	// DJL HuggingFace Tokenizers
+	implementation 'ai.djl.huggingface:tokenizers:0.25.0'
+
+	// DJL 코어 -> (토크나이저 의존성)
+	implementation 'ai.djl:api:0.25.0'
+
 }
 
 tasks.named('test') {

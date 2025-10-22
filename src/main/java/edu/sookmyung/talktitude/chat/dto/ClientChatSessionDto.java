@@ -13,4 +13,5 @@ public class ClientChatSessionDto {
     private String storeImageUrl;
     private String OrderSummary;  // 가격 포함
     private String lastMessage;    // 클라이언트 관점 textToShow
+    private long lastMessageTime;
 }

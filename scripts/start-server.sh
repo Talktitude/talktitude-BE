@@ -33,6 +33,9 @@ docker run -d \
   -e DB_URL="$DB_URL" \
   -e DB_USERNAME="$DB_USERNAME" \
   -e DB_PASSWORD="$DB_PASSWORD" \
+  -e RAG_DB_URL="$RAG_DB_URL" \
+  -e RAG_DB_USERNAME="$RAG_DB_USERNAME" \
+  -e RAG_DB_PASSWORD="$RAG_DB_PASSWORD" \
   -e OPENAI_API_KEY="$OPENAI_API_KEY" \
   -e OPENAI_BASE_URL="https://api.openai.com" \
   -e JWT_ISSUER="talktitude" \

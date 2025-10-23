@@ -171,3 +171,5 @@ gradle-app.setting
 
 # application.properties
 .env
+
+.idea

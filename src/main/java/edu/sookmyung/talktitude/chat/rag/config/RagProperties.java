@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "rag")
 public class RagProperties {
-    private boolean enabled = false;
+    private boolean enabled = true;
     private int topk = 4;
     private int n = 3; // 추천 개수 (참고용)
     private int bizDays = 3; // 영업일 표기 (참고용)

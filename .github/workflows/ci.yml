@@ -80,6 +80,9 @@ jobs:
           aws ssm put-parameter --name "/talktitude/db-url" --value "${{ secrets.RDS_URL }}" --type "SecureString" --overwrite
           aws ssm put-parameter --name "/talktitude/db-username" --value "${{ secrets.RDS_USERNAME }}" --type "SecureString" --overwrite
           aws ssm put-parameter --name "/talktitude/db-password" --value "${{ secrets.RDS_PASSWORD }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/rag-db-url" --value "${{ secrets.RAG_DB_URL }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/rag-db-username" --value "${{ secrets.RAG_DB_USERNAME }}" --type "SecureString" --overwrite
+          aws ssm put-parameter --name "/talktitude/rag-db-password" --value "${{ secrets.RAG_DB_PASSWORD }}" --type "SecureString" --overwrite
           aws ssm put-parameter --name "/talktitude/openai-api-key" --value "${{ secrets.OPENAI_API_KEY }}" --type "SecureString" --overwrite
           aws ssm put-parameter --name "/talktitude/jwt-secret" --value "${{ secrets.JWT_SECRET_KEY }}" --type "SecureString" --overwrite
           aws ssm put-parameter --name "/talktitude/aws-access-key" --value "${{ secrets.AWS_ACCESS_KEY_ID }}" --type "SecureString" --overwrite

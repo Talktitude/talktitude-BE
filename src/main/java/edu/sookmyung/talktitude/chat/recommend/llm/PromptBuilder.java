@@ -16,6 +16,7 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
+// LLM 시스템/유저 프롬프트 구성
 public class PromptBuilder {
 
     private final ObjectMapper om = new ObjectMapper();

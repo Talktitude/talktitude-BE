@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+// cs_kb.jsonl를 메모리로 로딩
 @Component
 @RequiredArgsConstructor
 public class KnowledgeBase {

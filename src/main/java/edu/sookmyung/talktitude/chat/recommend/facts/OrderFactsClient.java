@@ -16,6 +16,7 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
+// 주문 사실값 생성
 public class OrderFactsClient {
 
     private final OrderMenuRepository orderMenuRepository;

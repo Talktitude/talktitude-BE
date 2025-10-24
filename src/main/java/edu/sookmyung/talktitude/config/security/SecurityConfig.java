@@ -64,6 +64,10 @@ public class SecurityConfig {
                         // 비인증 허용 API
                         .requestMatchers("/members/**", "/clients/**", "/reports/run", "/logout","/tokens").permitAll()
 
+                        // RAG 관리용 엔드포인트는 로컬에서 열어둠
+                        .requestMatchers("/admin/rag/**").permitAll()
+                        // 추천 테스트 엔드포인트도 임시 허용
+                        .requestMatchers(HttpMethod.POST, "/chat/sessions/*/messages/test-recommendations").permitAll()
                         // 그 외는 인증 필요
                         .anyRequest().authenticated()
                 )

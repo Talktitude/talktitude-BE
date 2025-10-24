@@ -5,6 +5,9 @@ echo "--------------- 서버 배포 시작 -----------------"
 DB_URL=$(aws ssm get-parameter --name "/talktitude/db-url" --with-decryption --query "Parameter.Value" --output text)
 DB_USERNAME=$(aws ssm get-parameter --name "/talktitude/db-username" --with-decryption --query "Parameter.Value" --output text)
 DB_PASSWORD=$(aws ssm get-parameter --name "/talktitude/db-password" --with-decryption --query "Parameter.Value" --output text)
+RAG_DB_URL=$(aws ssm get-parameter --name "/talktitude/rag-db-url" --with-decryption --query "Parameter.Value" --output text)
+RAG_DB_USERNAME=$(aws ssm get-parameter --name "/talktitude/rag-db-username" --with-decryption --query "Parameter.Value" --output text)
+RAG_DB_PASSWORD=$(aws ssm get-parameter --name "/talktitude/rag-db-password" --with-decryption --query "Parameter.Value" --output text)
 OPENAI_API_KEY=$(aws ssm get-parameter --name "/talktitude/openai-api-key" --with-decryption --query "Parameter.Value" --output text)
 JWT_SECRET_KEY=$(aws ssm get-parameter --name "/talktitude/jwt-secret" --with-decryption --query "Parameter.Value" --output text)
 AWS_ACCESS_KEY_ID=$(aws ssm get-parameter --name "/talktitude/aws-access-key" --with-decryption --query "Parameter.Value" --output text)
@@ -33,6 +36,9 @@ docker run -d \
   -e DB_URL="$DB_URL" \
   -e DB_USERNAME="$DB_USERNAME" \
   -e DB_PASSWORD="$DB_PASSWORD" \
+  -e RAG_DB_URL="$RAG_DB_URL" \
+  -e RAG_DB_USERNAME="$RAG_DB_USERNAME" \
+  -e RAG_DB_PASSWORD="$RAG_DB_PASSWORD" \
   -e OPENAI_API_KEY="$OPENAI_API_KEY" \
   -e OPENAI_BASE_URL="https://api.openai.com" \
   -e JWT_ISSUER="talktitude" \

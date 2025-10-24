@@ -39,7 +39,7 @@ public class PolitenessClassificationService {
     private static final float EMOTION_THRESHOLD = 0.4f;
 
     // S3에서 다운로드할 파일들
-    private static final String MODEL_FILE = "classifier_structure.onnx"; //ONNX로 변환한 실제 AI 모델
+    private static final String MODEL_FILE = "classifier_structure_cc.onnx.onnx"; //ONNX로 변환한 실제 AI 모델
     private static final String TOKENIZER_FILE = "tokenizer_reduce.json"; //텍스트를 토큰으로 변환하는 규칙이 담긴 json
 
     @Value("${aws.access-key}")

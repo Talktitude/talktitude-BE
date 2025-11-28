@@ -1,0 +1,19 @@
+package edu.sookmyung.talktitude.chat.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class SessionUpdatedPush {
+    private Long sessionId;
+    private String clientLoginId;
+    private String clientPhone;
+    private String profileImageUrl;
+    private String status;
+    private long lastMessageTime;
+}

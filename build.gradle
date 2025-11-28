@@ -21,26 +21,79 @@ configurations {
 
 repositories {
 	mavenCentral()
-}
+	}
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-batch'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation platform("org.springframework.ai:spring-ai-bom:1.0.0")
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-websocket'
-	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	/* GPT API */
+	implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	/* Spring Batch */
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+	/* Database */
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	runtimeOnly 'com.mysql:mysql-connector-j'
-	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+	/* Security */
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+	implementation 'io.jsonwebtoken:jjwt:0.9.1' // 자바 jwt 라이브러리
+
+	/* Thymeleaf */
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	/* Validation */
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	/* Web Socket */
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	/* Lombok */
+	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	/* Test */
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.batch:spring-batch-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.springframework.batch:spring-batch-test'
+	testImplementation 'com.h2database:h2'
+
+
+	/* javax */
+	implementation 'javax.xml.bind:jaxb-api:2.3.1' //xml 문서와 java 객체 간 매핑 자동화
+
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+	//.env
+	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+	// PostgreSQL + pgvector
+	implementation 'org.postgresql:postgresql:42.7.3'
+	implementation 'com.pgvector:pgvector:0.1.3' // JDBC 바인딩
+
+
+	// Spring AI (임베딩 전용)
+	// implementation platform("org.springframework.ai:spring-ai-bom:1.0.0")
+	// implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+
+	// S3
+	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.767'
+
+	// ONNX Runtime
+	implementation 'com.microsoft.onnxruntime:onnxruntime:1.16.3'
+
+	// DJL HuggingFace Tokenizers
+	implementation 'ai.djl.huggingface:tokenizers:0.25.0'
+
+	// DJL 코어 -> (토크나이저 의존성)
+	implementation 'ai.djl:api:0.25.0'
+
 }
 
 tasks.named('test') {

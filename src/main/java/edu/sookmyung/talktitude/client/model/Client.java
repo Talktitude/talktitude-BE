@@ -1,34 +1,32 @@
 package edu.sookmyung.talktitude.client.model;
 
+import edu.sookmyung.talktitude.member.model.BaseUser;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import java.util.List;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-public class Client {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "login_id", unique = true)
-    private String loginId;
-
-    @Column(nullable = false, length = 60)
-    private String passWord;
-
-    @Column(length = 10)
-    private String name;
-
-    @Column(nullable = false, length = 15)
-    private String phone;
-
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted = false;
+@SuperBuilder
+public class Client extends BaseUser{
 
     @Column(nullable = false, length = 100)
     private String address;
+
+    @OneToOne(mappedBy = "client")
+    private Point point;
+
+    @OneToMany(mappedBy = "client")
+    private List<Coupon> coupons;
+
+
+    public String getUserType() {
+        return "Client";
+    }
 }

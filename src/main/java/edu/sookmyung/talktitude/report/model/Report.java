@@ -22,7 +22,8 @@ public class Report {
     private ChatSession chatSession;
 
     @Column(nullable=false)
-    private String category;
+    @Enumerated(EnumType.STRING)
+    private Category category; //카테고리 처리
 
     @Column(name="summary_text",nullable=false)
     private String summaryText;

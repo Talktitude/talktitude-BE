@@ -1,7 +1,7 @@
 package edu.sookmyung.talktitude.chat.model;
 
-import edu.sookmyung.talktitude.client.model.Client;
-import edu.sookmyung.talktitude.member.model.Member;
+
+import edu.sookmyung.talktitude.common.util.DateTimeUtils;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,6 +33,11 @@ public class ChatMessage {
     private String convertedText;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) createdAt = DateTimeUtils.nowKst(); // KST 고정
+    }
 
 }

@@ -4,37 +4,40 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Collection;
+import java.util.List;
 
 @Entity
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-public class Member {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "login_id", nullable = false, unique = true)
-    private String loginId;
-
-    @Column(nullable = false, length = 60)
-    private String password;
-
-    @Column(nullable = false, length = 10)
-    private String name;
-
-    @Column(nullable = false, length = 15)
-    private String phone;
+@SuperBuilder
+public class Member extends BaseUser { //UserDetails를 상속받아 인증 객체로 사용
 
     @Column(nullable = false, length = 50)
     private String email;
 
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted = false;
-
     @Column(name = "is_filter", nullable = false)
     private boolean isFilter = true;
+
+    public String getUserType() {
+        return "Member";
+    }
+
+    @Override
+    public void updateProfile(String name, String phone, String email) {
+        super.updateProfile(name, phone, null);
+        if (email != null && !email.isBlank()) {
+            this.email = email;
+        }
+    }
 }
+
+
 
 
 

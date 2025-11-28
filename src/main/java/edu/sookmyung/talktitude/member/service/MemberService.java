@@ -1,0 +1,95 @@
+package edu.sookmyung.talktitude.member.service;
+
+import edu.sookmyung.talktitude.common.exception.BaseException;
+import edu.sookmyung.talktitude.common.exception.ErrorCode;
+import edu.sookmyung.talktitude.member.dto.MemberDto;
+import edu.sookmyung.talktitude.config.jwt.TokenProvider;
+import edu.sookmyung.talktitude.member.dto.LoginResponse;
+import edu.sookmyung.talktitude.member.model.Member;
+import edu.sookmyung.talktitude.token.model.RefreshToken;
+import edu.sookmyung.talktitude.member.repository.MemberRepository;
+import edu.sookmyung.talktitude.token.service.RefreshTokenService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@RequiredArgsConstructor
+@Service
+@Slf4j
+public class MemberService {
+
+    @Autowired
+    @Qualifier("memberAuthManager")
+    private final AuthenticationManager memberAuthManager;
+
+    private final MemberRepository memberRepository;
+    private final TokenProvider tokenProvider;
+    private final RefreshTokenService refreshTokenService;
+    private final PasswordEncoder passwordEncoder;
+
+    public void register(MemberDto dto) {
+        // 중복 체크
+        boolean exists = memberRepository.findByLoginId(dto.getLoginId()).isPresent();
+        if (exists) {
+            throw new BaseException(ErrorCode.DUPLICATE_LOGIN_ID);
+        }
+
+        // 회원 생성
+        Member member = Member.builder()
+                .loginId(dto.getLoginId())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .name(dto.getName())
+                .phone(dto.getPhone())
+                .email(dto.getEmail())
+                .isDeleted(false)
+                .isFilter(true)
+                .build();
+
+        memberRepository.save(member);
+    }
+
+    public boolean isDuplicateLoginId(String loginId) {
+        return memberRepository.findByLoginId(loginId).isPresent();
+    }
+
+    public Member findMemberById(Long id) {
+        return memberRepository.findById(id).orElseThrow(() -> new BaseException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    public LoginResponse login(String loginId, String password) {
+
+        try {
+            //AuthenticationManager 인증 처리
+            Authentication authentication = memberAuthManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginId, password)
+            );
+
+            //인증된 사용자 정보 가져오기
+            Member member = (Member) authentication.getPrincipal();
+
+            //토큰 생성
+            String accessToken = tokenProvider.generateAccessToken(member);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(member);
+
+            return new LoginResponse(accessToken, refreshToken.getRefreshToken());
+
+        } catch (BadCredentialsException e) {
+            log.error("아이디 또는 비밀번호가 올바르지 않습니다.:{}",e.getMessage());
+            throw new BaseException(ErrorCode.WRONG_CREDENTIALS);
+        } catch (UsernameNotFoundException e) {
+            log.error("존재하지 않는 사용자 입니다:{}", e.getMessage());
+            throw new BaseException(ErrorCode.AUTHENTICATION_FAILED);
+        } catch (Exception e) {
+            log.error("로그인 처리 중 오류 발생:{}", e.getMessage());
+            throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+ }

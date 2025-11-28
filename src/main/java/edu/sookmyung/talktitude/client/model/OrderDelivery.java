@@ -29,4 +29,7 @@ public class OrderDelivery {
 
     @Column(name="restaurant_note",columnDefinition = "TEXT")
     private String restaurantNote;
+
+    @Enumerated(EnumType.STRING)
+    private DeliveryStatus status;
 }
